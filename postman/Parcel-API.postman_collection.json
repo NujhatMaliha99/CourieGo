@@ -1,0 +1,48 @@
+{
+  "info": {
+    "name": "CleanBee Parcel API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "parcelId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "Create Parcel",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sender_id\": 1,\n  \"receiver_id\": 1,\n  \"tracking_id\": \"CB-2026-0001\",\n  \"parcel_type\": \"Documents\",\n  \"weight\": 0.75,\n  \"charge\": 120.00,\n  \"status\": \"pending\"\n}"
+        },
+        "url": "{{baseUrl}}/api/parcels"
+      }
+    },
+    {
+      "name": "Get All Parcels",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/parcels" }
+    },
+    {
+      "name": "Get Parcel By ID",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/parcels/{{parcelId}}" }
+    },
+    {
+      "name": "Update Parcel",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sender_id\": 1,\n  \"receiver_id\": 1,\n  \"tracking_id\": \"CB-2026-0001\",\n  \"parcel_type\": \"Documents\",\n  \"weight\": 0.75,\n  \"charge\": 150.00,\n  \"status\": \"in_transit\"\n}"
+        },
+        "url": "{{baseUrl}}/api/parcels/{{parcelId}}"
+      }
+    },
+    {
+      "name": "Delete Parcel",
+      "request": { "method": "DELETE", "url": "{{baseUrl}}/api/parcels/{{parcelId}}" }
+    }
+  ]
+}

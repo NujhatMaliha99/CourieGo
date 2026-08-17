@@ -2,16 +2,14 @@
 
 A minimal courier parcel management project built with React, Vite, Node.js, Express, and MySQL.
 
-The frontend currently provides a simple parcel creation form and a read-only parcel list. The backend contains REST API endpoints for parcel CRUD operations.
+This repository currently contains only the **Create** part of parcel CRUD. Other teammates can add Read, Update, and Delete in separate feature branches.
 
 ## Features
 
-- Create a parcel from the frontend
-- View saved parcels in a table
+- Create a parcel from the React frontend
 - Store parcel data in MySQL
 - Validate parcel request data
 - Handle duplicate tracking IDs and invalid foreign keys
-- REST endpoints for Create, Read, Update, and Delete
 
 ## Technology
 
@@ -75,10 +73,6 @@ Open [http://localhost:5173](http://localhost:5173) in a browser.
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/api/parcels` | Create a parcel |
-| `GET` | `/api/parcels` | Get all parcels |
-| `GET` | `/api/parcels/:id` | Get a parcel by primary key |
-| `PUT` | `/api/parcels/:id` | Update a parcel |
-| `DELETE` | `/api/parcels/:id` | Delete a parcel |
 | `GET` | `/api/health` | Check API status |
 
 ## Sample Parcel
@@ -101,4 +95,4 @@ Allowed statuses: `pending`, `picked_up`, `in_transit`, `out_for_delivery`, `del
 
 - The database schema creates sample sender `1` and receiver `1` for parcel testing.
 - `.env` is ignored by Git and must not be uploaded.
-- The included Postman collection can be used to test all API endpoints.
+- The included Postman collection can be used to test parcel creation.

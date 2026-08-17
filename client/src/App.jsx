@@ -1,15 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import ReceiverManagement from './pages/ReceiverManagement';
 
 const emptyForm = {
-  sender_id: 1, receiver_id: 1, tracking_id: '', parcel_type: 'Documents',
-  weight: '', charge: '', status: 'pending',
+  sender_id: 1,
+  receiver_id: 1,
+  tracking_id: '',
+  parcel_type: 'Documents',
+  weight: '',
+  charge: '',
+  status: 'pending',
 };
 
-export default function App() {
-  const [parcels, setParcels] = useState([]);
+function ParcelPage() {
   const [form, setForm] = useState(emptyForm);
-  const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [parcels, setParcels] = useState([]); // parcels state যুক্ত করা হয়েছে
+  const [createdParcels, setCreatedParcels] = useState([]);
+  const [selectedParcel, setSelectedParcel] = useState(null);
 
   // Read One (Search State)
   const [searchId, setSearchId] = useState('');
@@ -20,12 +29,18 @@ export default function App() {
   const [statusFilter, setStatusFilter] = useState('all');
 
   const loadParcels = async () => {
-    const response = await fetch('/api/parcels');
-    const result = await response.json();
-    setParcels(result.data || []);
+    try {
+      const response = await fetch('/api/parcels');
+      const result = await response.json();
+      setParcels(Array.isArray(result) ? result : result.data || []);
+    } catch (error) {
+      console.error('Error loading parcels:', error);
+    }
   };
 
-  useEffect(() => { loadParcels(); }, []);
+  useEffect(() => {
+    loadParcels();
+  }, []);
 
   const searchParcelById = async (event) => {
     event.preventDefault();
@@ -33,84 +48,260 @@ export default function App() {
     setSearchMessage('');
     if (!searchId) return;
 
-    const response = await fetch(`/api/parcels/${searchId}`);
-    const result = await response.json();
-    if (response.ok) setSingleParcel(result.data);
-    else setSearchMessage(result.message || 'Parcel not found.');
-  };
-
-  const change = (event) => setForm({ ...form, [event.target.name]: event.target.value });
-
-  const createParcel = async (event) => {
-    event.preventDefault();
-    const response = await fetch('/api/parcels', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-    const result = await response.json();
-    setMessage(response.ok ? 'Parcel created successfully.' : result.message);
-    if (response.ok) {
-      setForm(emptyForm);
-      setShowForm(false);
-      loadParcels();
+    try {
+      const response = await fetch(`/api/parcels/${searchId}`);
+      const result = await response.json();
+      if (response.ok) {
+        setSingleParcel(result.data || result);
+      } else {
+        setSearchMessage(result.message || 'Parcel not found.');
+      }
+    } catch (error) {
+      setSearchMessage('Error searching parcel.');
     }
   };
 
+  const change = ({ target }) =>
+    setForm({ ...form, [target.name]: target.value });
+
+  const createParcel = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+
+    try {
+      const response = await fetch('/api/parcels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+
+      const result = await response.json();
+      setMessage(
+        response.ok
+          ? `Parcel created. ID: ${result.data?.parcel_id || result.data?.id}`
+          : result.message
+      );
+      if (response.ok) {
+        setCreatedParcels((prev) => [result.data, ...prev]);
+        setForm(emptyForm);
+        loadParcels();
+      }
+    } catch (error) {
+      setMessage('Failed to create parcel.');
+    }
+    setSaving(false);
+  };
+
   // Feature 1: Filter Logic
-  const filteredParcels = parcels.filter(p => statusFilter === 'all' || p.status === statusFilter);
+  const filteredParcels = parcels.filter(
+    (p) => statusFilter === 'all' || p.status === statusFilter
+  );
+  const placeholder = (action) =>
+    setMessage(`${action} will be added by another teammate.`);
 
   return (
     <main>
       <header>
-        <div><h1>Parcel Management</h1><p>Create and view parcels</p></div>
-        <button onClick={() => setShowForm(!showForm)}>+ Add Parcel</button>
+        <h1>Create Parcel</h1>
+        <p>Add a new parcel to the courier database.</p>
+
+        <Link to="/receivers">
+          <button>Receiver Management</button>
+        </Link>
       </header>
 
-      {showForm && (
-        <form onSubmit={createParcel}>
-          <input name="sender_id" type="number" min="1" value={form.sender_id} onChange={change} placeholder="Sender ID" required />
-          <input name="receiver_id" type="number" min="1" value={form.receiver_id} onChange={change} placeholder="Receiver ID" required />
-          <input name="tracking_id" minLength="3" value={form.tracking_id} onChange={change} placeholder="Tracking ID" required />
-          <input name="parcel_type" value={form.parcel_type} onChange={change} placeholder="Parcel type" required />
-          <input name="weight" type="number" min="0.01" step="0.01" value={form.weight} onChange={change} placeholder="Weight" required />
-          <input name="charge" type="number" min="0" step="0.01" value={form.charge} onChange={change} placeholder="Charge" required />
-          <select name="status" value={form.status} onChange={change}>
-            <option value="pending">Pending</option>
-            <option value="picked_up">Picked up</option>
-            <option value="in_transit">In transit</option>
-            <option value="out_for_delivery">Out for delivery</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <button type="submit">Create</button>
-          <p className="message">{message}</p>
-        </form>
+      <form onSubmit={createParcel}>
+        <input
+          name="sender_id"
+          type="number"
+          min="1"
+          value={form.sender_id}
+          onChange={change}
+          placeholder="Sender ID"
+          required
+        />
+
+        <input
+          name="receiver_id"
+          type="number"
+          min="1"
+          value={form.receiver_id}
+          onChange={change}
+          placeholder="Receiver ID"
+          required
+        />
+
+        <input
+          name="tracking_id"
+          minLength="3"
+          value={form.tracking_id}
+          onChange={change}
+          placeholder="Tracking ID"
+          required
+        />
+
+        <input
+          name="parcel_type"
+          value={form.parcel_type}
+          onChange={change}
+          placeholder="Parcel type"
+          required
+        />
+
+        <input
+          name="weight"
+          type="number"
+          min="0.01"
+          step="0.01"
+          value={form.weight}
+          onChange={change}
+          placeholder="Weight"
+          required
+        />
+
+        <input
+          name="charge"
+          type="number"
+          min="0"
+          step="0.01"
+          value={form.charge}
+          onChange={change}
+          placeholder="Charge"
+          required
+        />
+
+        <select name="status" value={form.status} onChange={change}>
+          <option value="pending">Pending</option>
+          <option value="picked_up">Picked up</option>
+          <option value="in_transit">In transit</option>
+          <option value="out_for_delivery">Out for delivery</option>
+          <option value="delivered">Delivered</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+
+        <button disabled={saving}>
+          {saving ? 'Creating...' : 'Create Parcel'}
+        </button>
+
+        {message && <p className="message">{message}</p>}
+      </form>
+
+      {createdParcels.length > 0 && (
+        <section>
+          <h2>Created Parcels</h2>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tracking ID</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {createdParcels.map((parcel, index) => (
+                  <tr key={parcel.parcel_id || parcel.id || index}>
+                    <td>{parcel.tracking_id}</td>
+                    <td>{parcel.parcel_type}</td>
+                    <td>{parcel.status?.replaceAll('_', ' ')}</td>
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="view"
+                        onClick={() => setSelectedParcel(parcel)}
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        className="edit"
+                        onClick={() => placeholder('Edit')}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="delete"
+                        onClick={() => placeholder('Delete')}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       )}
 
       {/* READ ONE (Search Box) */}
-      <section className="search-section" style={{ margin: '20px 0', padding: '15px', border: '1px solid #ccc', borderRadius: '5px' }}>
+      <section
+        className="search-section"
+        style={{
+          margin: '20px 0',
+          padding: '15px',
+          border: '1px solid #ccc',
+          borderRadius: '5px',
+        }}
+      >
         <h3>Search Parcel by ID (Read One)</h3>
-        <form onSubmit={searchParcelById} style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-          <input type="number" placeholder="Enter Parcel ID (e.g. 1)" value={searchId} onChange={(e) => setSearchId(e.target.value)} required />
+        <form
+          onSubmit={searchParcelById}
+          style={{ display: 'flex', gap: '10px', marginTop: '10px' }}
+        >
+          <input
+            type="number"
+            placeholder="Enter Parcel ID (e.g. 1)"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            required
+          />
           <button type="submit">Search</button>
         </form>
 
         {singleParcel && (
-          <div style={{ marginTop: '10px', background: '#f0fdf4', padding: '10px', borderRadius: '4px' }}>
-            <p><strong>Parcel ID:</strong> {singleParcel.parcel_id} | <strong>Tracking:</strong> {singleParcel.tracking_id} | <strong>Type:</strong> {singleParcel.parcel_type} | <strong>Weight:</strong> {singleParcel.weight} kg | <strong>Charge:</strong> ৳{singleParcel.charge} | <strong>Status:</strong> {singleParcel.status?.replaceAll('_', ' ')}</p>
+          <div
+            style={{
+              marginTop: '10px',
+              background: '#f0fdf4',
+              padding: '10px',
+              borderRadius: '4px',
+            }}
+          >
+            <p>
+              <strong>Parcel ID:</strong> {singleParcel.parcel_id || singleParcel.id} |{' '}
+              <strong>Tracking:</strong> {singleParcel.tracking_id} |{' '}
+              <strong>Type:</strong> {singleParcel.parcel_type} |{' '}
+              <strong>Weight:</strong> {singleParcel.weight} kg |{' '}
+              <strong>Charge:</strong> ৳{singleParcel.charge} |{' '}
+              <strong>Status:</strong> {singleParcel.status?.replaceAll('_', ' ')}
+            </p>
           </div>
         )}
-        {searchMessage && <p style={{ color: 'red', marginTop: '10px' }}>{searchMessage}</p>}
+        {searchMessage && (
+          <p style={{ color: 'red', marginTop: '10px' }}>{searchMessage}</p>
+        )}
       </section>
 
       {/* READ ALL (Table + Filter) */}
       <section>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            justify: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           <h2>Parcels</h2>
-          {/*  Status Filter */}
-          <label>Filter: 
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ marginLeft: '5px' }}>
+          <label>
+            Filter:
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ marginLeft: '5px' }}
+            >
               <option value="all">All</option>
               <option value="pending">Pending</option>
               <option value="picked_up">Picked up</option>
@@ -133,14 +324,14 @@ export default function App() {
               </tr>
             </thead>
             <tbody>
-              {filteredParcels.map(parcel => (
-                <tr key={parcel.parcel_id}>
-                  <td>{parcel.parcel_id}</td>
+              {filteredParcels.map((parcel, index) => (
+                <tr key={parcel.parcel_id || parcel.id || index}>
+                  <td>{parcel.parcel_id || parcel.id}</td>
                   <td>{parcel.tracking_id}</td>
                   <td>{parcel.parcel_type}</td>
                   <td>{parcel.weight} kg</td>
                   <td>৳{parcel.charge}</td>
-                  <td>{parcel.status.replaceAll('_', ' ')}</td>
+                  <td>{parcel.status?.replaceAll('_', ' ')}</td>
                 </tr>
               ))}
             </tbody>
@@ -148,6 +339,68 @@ export default function App() {
         </div>
         {!filteredParcels.length && <p className="empty">No parcels found.</p>}
       </section>
+
+      {/* Modal / Overlay */}
+      {selectedParcel && (
+        <div className="overlay" onClick={() => setSelectedParcel(null)}>
+          <article
+            className="details"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="details-head">
+              <h2>Parcel Details</h2>
+              <button type="button" onClick={() => setSelectedParcel(null)}>
+                X
+              </button>
+            </div>
+            <dl>
+              <div>
+                <dt>Parcel ID</dt>
+                <dd>{selectedParcel.parcel_id || selectedParcel.id}</dd>
+              </div>
+              <div>
+                <dt>Tracking ID</dt>
+                <dd>{selectedParcel.tracking_id}</dd>
+              </div>
+              <div>
+                <dt>Sender ID</dt>
+                <dd>{selectedParcel.sender_id}</dd>
+              </div>
+              <div>
+                <dt>Receiver ID</dt>
+                <dd>{selectedParcel.receiver_id}</dd>
+              </div>
+              <div>
+                <dt>Parcel Type</dt>
+                <dd>{selectedParcel.parcel_type}</dd>
+              </div>
+              <div>
+                <dt>Weight</dt>
+                <dd>{selectedParcel.weight} kg</dd>
+              </div>
+              <div>
+                <dt>Charge</dt>
+                <dd>BDT {selectedParcel.charge}</dd>
+              </div>
+              <div>
+                <dt>Status</dt>
+                <dd>{selectedParcel.status?.replaceAll('_', ' ')}</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      )}
     </main>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ParcelPage />} />
+        <Route path="/receivers" element={<ReceiverManagement />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

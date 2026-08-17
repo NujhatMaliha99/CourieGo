@@ -101,3 +101,8 @@ td {
   border: 1px solid #d5e9ed;
   border-radius: 6px;
 }
+
+.receiver-message {
+  color: #087f91;
+  font-weight: 600;
+}

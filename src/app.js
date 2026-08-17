@@ -1,11 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const parcelRoutes = require('./routes/parcelRoutes');
-const receiverRoutes = require('./routes/receiverRoutes');
+
+let receiverRoutes;
+try {
+  receiverRoutes = require('./routes/receiverRoutes');
+} catch (e) {
+  receiverRoutes = require('./routes/receivers');
+}
 
 const app = express();
 
-// Enable frontend access and parse JSON request bodies.
 app.use(cors());
 app.use(express.json());
 
@@ -16,12 +21,10 @@ app.get('/api/health', (req, res) => {
 app.use('/api/parcels', parcelRoutes);
 app.use('/api/receivers', receiverRoutes);
 
-// Return a clear response for unknown endpoints.
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found.' });
 });
 
-// Central error handler keeps controller error responses consistent.
 app.use((error, req, res, next) => {
   console.error(error);
 

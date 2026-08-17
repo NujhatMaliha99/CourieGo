@@ -1,5 +1,38 @@
 const pool = require('../config/database');
 
+async function getAllReceivers(req, res, next) {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM receivers ORDER BY receiver_id DESC'
+    );
+
+    return res.status(200).json({
+      message: 'Receivers retrieved successfully.',
+      data: rows,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getReceiverById(req, res, next) {
+  try {
+    const { id } = req.params;
+    const [rows] = await pool.execute('SELECT * FROM receivers WHERE receiver_id = ?', [id]);
+
+    if (!rows.length) {
+      return res.status(404).json({ message: 'Receiver not found.' });
+    }
+
+    return res.status(200).json({
+      message: 'Receiver retrieved successfully.',
+      data: rows[0],
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function createReceiver(req, res, next) {
   try {
     const { full_name, phone, email, address } = req.body;
@@ -23,4 +56,4 @@ async function createReceiver(req, res, next) {
   }
 }
 
-module.exports = { createReceiver };
+module.exports = { getAllReceivers, getReceiverById, createReceiver };

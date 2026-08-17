@@ -1,13 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./ReceiverManagement.css";
 
 export default function ReceiverManagement() {
-  const [receivers, setReceivers] = useState([
-    { id: 1, name: "John Doe", phone: "01711122334", email: "john@gmail.com", address: "Dhaka" },
-    { id: 2, name: "Jane Smith", phone: "01822233445", email: "jane@gmail.com", address: "Chattogram" },
-  ]);
-
+  const [receivers, setReceivers] = useState([]);
   const [search, setSearch] = useState("");
   const emptyForm = { name: "", phone: "", email: "", address: "" };
   const [form, setForm] = useState(emptyForm);
@@ -16,26 +12,98 @@ export default function ReceiverManagement() {
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const list = receivers.filter(
-    r =>
-      r.name.toLowerCase().includes(search.toLowerCase()) ||
-      r.phone.includes(search)
-  );
+  // READ ONE (Search by ID state)
+  const [searchId, setSearchId] = useState("");
+  const [singleReceiver, setSingleReceiver] = useState(null);
+  const [searchMessage, setSearchMessage] = useState("");
 
-  const save = async e => {
+  // 1. READ ALL: Fetch receivers from backend API
+  const loadReceivers = async () => {
+    try {
+      const response = await fetch("/api/receivers");
+      
+      if (!response.ok) {
+        throw new Error(`Server status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const rawList = Array.isArray(result) ? result : result.data || [];
+
+      // Normalize backend data structure for UI
+      const formattedList = rawList.map((r) => ({
+        id: r.receiver_id || r.id,
+        name: r.full_name || r.name || "",
+        phone: r.phone || r.contact_number || "",
+        email: r.email || "",
+        address: r.address || "",
+      }));
+
+      setReceivers(formattedList);
+    } catch (error) {
+      console.error("Could not load receivers:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadReceivers();
+  }, []);
+
+  // 2. READ ONE: Search receiver by ID from backend
+  const searchReceiverById = async (e) => {
+    e.preventDefault();
+    setSingleReceiver(null);
+    setSearchMessage("");
+    if (!searchId) return;
+
+    try {
+      const response = await fetch(`/api/receivers/${searchId}`);
+      const result = await response.json();
+
+      if (response.ok) {
+        const data = result.data || result;
+        setSingleReceiver({
+          id: data.receiver_id || data.id,
+          name: data.full_name || data.name || "",
+          phone: data.phone || "",
+          email: data.email || "",
+          address: data.address || "",
+        });
+      } else {
+        setSearchMessage(result.message || "Receiver not found.");
+      }
+    } catch (error) {
+      setSearchMessage("Could not connect to the backend.");
+    }
+  };
+
+  // Safe Filtering Logic (Search by Name or Phone)
+  const list = receivers.filter((r) => {
+    const searchTerm = search.toLowerCase().trim();
+    if (!searchTerm) return true;
+
+    const nameMatches = r.name ? r.name.toLowerCase().includes(searchTerm) : false;
+    const phoneMatches = r.phone ? r.phone.toString().includes(searchTerm) : false;
+
+    return nameMatches || phoneMatches;
+  });
+
+  const save = async (e) => {
     e.preventDefault();
 
     if (editId) {
       setReceivers(
-        receivers.map(r => r.id === editId ? { ...r, ...form } : r)
+        receivers.map((r) => (r.id === editId ? { ...r, ...form } : r))
       );
       setMessage("Receiver updated in the frontend only.");
+      setForm(emptyForm);
+      setEditId(null);
+      setModal(null);
     } else {
       setSaving(true);
       try {
-        const response = await fetch('/api/receivers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/receivers", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             full_name: form.name,
             phone: form.phone,
@@ -46,72 +114,93 @@ export default function ReceiverManagement() {
         const result = await response.json();
 
         if (!response.ok) {
-          setMessage(result.errors?.join(' ') || result.message);
+          setMessage(result.errors?.join(" ") || result.message);
           return;
         }
 
-        const receiver = result.data;
-        setReceivers(current => [...current, {
-          id: receiver.receiver_id,
-          name: receiver.full_name,
-          phone: receiver.phone,
-          email: receiver.email || '',
-          address: receiver.address,
-        }]);
-        setMessage(`Receiver created. ID: ${receiver.receiver_id}`);
+        setMessage(`Receiver created successfully.`);
+        await loadReceivers();
+        setForm(emptyForm);
+        setEditId(null);
+        setModal(null);
       } catch {
-        setMessage('Could not connect to the backend.');
-        return;
+        setMessage("Could not connect to the backend.");
       } finally {
         setSaving(false);
       }
     }
-
-    setForm(emptyForm);
-    setEditId(null);
-    setModal(null);
   };
 
-  const edit = r => {
+  const edit = (r) => {
     setForm({ name: r.name, phone: r.phone, email: r.email, address: r.address || "" });
     setEditId(r.id);
     setModal("form");
   };
 
   const remove = () => {
-    setReceivers(receivers.filter(r => r.id !== modal.id));
+    setReceivers(receivers.filter((r) => r.id !== modal.id));
     setModal(null);
   };
 
   return (
     <div className="receiver-page">
       <header>
-  <div>
-    <h1>Receiver Management</h1>
-    <p>Manage all receivers in the courier system.</p>
-  </div>
+        <div>
+          <h1>Receiver Management</h1>
+          <p>Manage all receivers in the courier system.</p>
+        </div>
 
-  <div>
-    <Link to="/">
-      <button>Back to Parcel</button>
-    </Link>
+        <div>
+          <Link to="/">
+            <button>Back to Parcel</button>
+          </Link>
 
-    <button onClick={() => {
-      setForm(emptyForm);
-      setEditId(null);
-      setModal("form");
-    }}>
-      + Add Receiver
-    </button>
-  </div>
-</header>
+          <button
+            onClick={() => {
+              setForm(emptyForm);
+              setEditId(null);
+              setMessage("");
+              setModal("form");
+            }}
+          >
+            + Add Receiver
+          </button>
+        </div>
+      </header>
 
+      {/* READ ONE: Search Box Section */}
+      <div className="card" style={{ marginBottom: "20px" }}>
+        <h3>Search Receiver by ID (Read One)</h3>
+        <form onSubmit={searchReceiverById} style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
+          <input
+            type="number"
+            placeholder="Enter Receiver ID (e.g. 1)"
+            value={searchId}
+            onChange={(e) => setSearchId(e.target.value)}
+            required
+          />
+          <button type="submit">Search</button>
+        </form>
+
+        {singleReceiver && (
+          <div style={{ marginTop: "10px", background: "#f0fdf4", padding: "10px", borderRadius: "4px" }}>
+            <p>
+              <strong>ID:</strong> {singleReceiver.id} | <strong>Name:</strong> {singleReceiver.name} |{" "}
+              <strong>Phone:</strong> {singleReceiver.phone} | <strong>Email:</strong> {singleReceiver.email} |{" "}
+              <strong>Address:</strong> {singleReceiver.address}
+            </p>
+          </div>
+        )}
+        {searchMessage && <p style={{ color: "red", marginTop: "10px" }}>{searchMessage}</p>}
+      </div>
+
+      {/* READ ALL: Search & Table */}
       <div className="card">
         {message && <p className="receiver-message">{message}</p>}
         <input
           placeholder="Search by name or phone..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
         />
 
         {list.length === 0 ? (
@@ -129,7 +218,7 @@ export default function ReceiverManagement() {
             </thead>
 
             <tbody>
-              {list.map(r => (
+              {list.map((r) => (
                 <tr key={r.id}>
                   <td>{r.id}</td>
                   <td>{r.name}</td>
@@ -156,7 +245,7 @@ export default function ReceiverManagement() {
         </p>
       </div>
 
-      {/* Add / Edit */}
+      {/* Add / Edit Modal */}
       {modal === "form" && (
         <div className="overlay">
           <div className="modal">
@@ -167,14 +256,14 @@ export default function ReceiverManagement() {
               <input
                 placeholder="Full Name"
                 value={form.name}
-                onChange={e => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
               />
 
               <input
                 placeholder="Phone"
                 value={form.phone}
-                onChange={e => setForm({ ...form, phone: e.target.value })}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 required
               />
 
@@ -182,14 +271,14 @@ export default function ReceiverManagement() {
                 placeholder="Email"
                 type="email"
                 value={form.email}
-                onChange={e => setForm({ ...form, email: e.target.value })}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
                 required
               />
 
               <input
                 placeholder="Address"
                 value={form.address}
-                onChange={e => setForm({ ...form, address: e.target.value })}
+                onChange={(e) => setForm({ ...form, address: e.target.value })}
                 required
               />
 
@@ -205,7 +294,7 @@ export default function ReceiverManagement() {
         </div>
       )}
 
-      {/* View */}
+      {/* View Modal */}
       {modal && modal.id && !modal.type && (
         <div className="overlay">
           <div className="modal">
@@ -219,7 +308,7 @@ export default function ReceiverManagement() {
         </div>
       )}
 
-      {/* Delete */}
+      {/* Delete Modal */}
       {modal?.type === "delete" && (
         <div className="overlay">
           <div className="modal">

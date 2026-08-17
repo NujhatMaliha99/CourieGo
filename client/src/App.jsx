@@ -16,8 +16,7 @@ function ParcelPage() {
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
-  const [parcels, setParcels] = useState([]); // parcels state যুক্ত করা হয়েছে
-  const [createdParcels, setCreatedParcels] = useState([]);
+  const [parcels, setParcels] = useState([]);
   const [selectedParcel, setSelectedParcel] = useState(null);
 
   // Read One (Search State)
@@ -82,9 +81,8 @@ function ParcelPage() {
           : result.message
       );
       if (response.ok) {
-        setCreatedParcels((prev) => [result.data, ...prev]);
         setForm(emptyForm);
-        loadParcels();
+        await loadParcels();
       }
     } catch (error) {
       setMessage('Failed to create parcel.');
@@ -186,56 +184,6 @@ function ParcelPage() {
         {message && <p className="message">{message}</p>}
       </form>
 
-      {createdParcels.length > 0 && (
-        <section>
-          <h2>Created Parcels</h2>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Tracking ID</th>
-                  <th>Type</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {createdParcels.map((parcel, index) => (
-                  <tr key={parcel.parcel_id || parcel.id || index}>
-                    <td>{parcel.tracking_id}</td>
-                    <td>{parcel.parcel_type}</td>
-                    <td>{parcel.status?.replaceAll('_', ' ')}</td>
-                    <td className="actions">
-                      <button
-                        type="button"
-                        className="view"
-                        onClick={() => setSelectedParcel(parcel)}
-                      >
-                        View
-                      </button>
-                      <button
-                        type="button"
-                        className="edit"
-                        onClick={() => placeholder('Edit')}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="delete"
-                        onClick={() => placeholder('Delete')}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
       {/* READ ONE (Search Box) */}
       <section
         className="search-section"
@@ -275,7 +223,7 @@ function ParcelPage() {
               <strong>Tracking:</strong> {singleParcel.tracking_id} |{' '}
               <strong>Type:</strong> {singleParcel.parcel_type} |{' '}
               <strong>Weight:</strong> {singleParcel.weight} kg |{' '}
-              <strong>Charge:</strong> ৳{singleParcel.charge} |{' '}
+              <strong>Charge:</strong> BDT {singleParcel.charge} |{' '}
               <strong>Status:</strong> {singleParcel.status?.replaceAll('_', ' ')}
             </p>
           </div>
@@ -290,7 +238,7 @@ function ParcelPage() {
         <div
           style={{
             display: 'flex',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             alignItems: 'center',
           }}
         >
@@ -321,6 +269,7 @@ function ParcelPage() {
                 <th>Weight</th>
                 <th>Charge</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -330,8 +279,13 @@ function ParcelPage() {
                   <td>{parcel.tracking_id}</td>
                   <td>{parcel.parcel_type}</td>
                   <td>{parcel.weight} kg</td>
-                  <td>৳{parcel.charge}</td>
+                  <td>BDT {parcel.charge}</td>
                   <td>{parcel.status?.replaceAll('_', ' ')}</td>
+                  <td className="actions">
+                    <button type="button" className="view" onClick={() => setSelectedParcel(parcel)}>View</button>
+                    <button type="button" className="edit" onClick={() => placeholder('Edit')}>Edit</button>
+                    <button type="button" className="delete" onClick={() => placeholder('Delete')}>Delete</button>
+                  </td>
                 </tr>
               ))}
             </tbody>

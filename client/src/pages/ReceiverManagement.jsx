@@ -4,14 +4,17 @@ import "./ReceiverManagement.css";
 
 export default function ReceiverManagement() {
   const [receivers, setReceivers] = useState([
-    { id: 1, name: "John Doe", phone: "01711122334", email: "john@gmail.com" },
-    { id: 2, name: "Jane Smith", phone: "01822233445", email: "jane@gmail.com" },
+    { id: 1, name: "John Doe", phone: "01711122334", email: "john@gmail.com", address: "Dhaka" },
+    { id: 2, name: "Jane Smith", phone: "01822233445", email: "jane@gmail.com", address: "Chattogram" },
   ]);
 
   const [search, setSearch] = useState("");
-  const [form, setForm] = useState({ name: "", phone: "", email: "" });
+  const emptyForm = { name: "", phone: "", email: "", address: "" };
+  const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [modal, setModal] = useState(null);
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const list = receivers.filter(
     r =>
@@ -19,24 +22,58 @@ export default function ReceiverManagement() {
       r.phone.includes(search)
   );
 
-  const save = e => {
+  const save = async e => {
     e.preventDefault();
 
     if (editId) {
       setReceivers(
         receivers.map(r => r.id === editId ? { ...r, ...form } : r)
       );
+      setMessage("Receiver updated in the frontend only.");
     } else {
-      setReceivers([...receivers, { id: Date.now(), ...form }]);
+      setSaving(true);
+      try {
+        const response = await fetch('/api/receivers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            full_name: form.name,
+            phone: form.phone,
+            email: form.email,
+            address: form.address,
+          }),
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          setMessage(result.errors?.join(' ') || result.message);
+          return;
+        }
+
+        const receiver = result.data;
+        setReceivers(current => [...current, {
+          id: receiver.receiver_id,
+          name: receiver.full_name,
+          phone: receiver.phone,
+          email: receiver.email || '',
+          address: receiver.address,
+        }]);
+        setMessage(`Receiver created. ID: ${receiver.receiver_id}`);
+      } catch {
+        setMessage('Could not connect to the backend.');
+        return;
+      } finally {
+        setSaving(false);
+      }
     }
 
-    setForm({ name: "", phone: "", email: "" });
+    setForm(emptyForm);
     setEditId(null);
     setModal(null);
   };
 
   const edit = r => {
-    setForm({ name: r.name, phone: r.phone, email: r.email });
+    setForm({ name: r.name, phone: r.phone, email: r.email, address: r.address || "" });
     setEditId(r.id);
     setModal("form");
   };
@@ -60,7 +97,7 @@ export default function ReceiverManagement() {
     </Link>
 
     <button onClick={() => {
-      setForm({ name: "", phone: "", email: "" });
+      setForm(emptyForm);
       setEditId(null);
       setModal("form");
     }}>
@@ -70,6 +107,7 @@ export default function ReceiverManagement() {
 </header>
 
       <div className="card">
+        {message && <p className="receiver-message">{message}</p>}
         <input
           placeholder="Search by name or phone..."
           value={search}
@@ -125,6 +163,7 @@ export default function ReceiverManagement() {
             <h2>{editId ? "Edit Receiver" : "Add Receiver"}</h2>
 
             <form onSubmit={save}>
+              {message && <p className="receiver-message">{message}</p>}
               <input
                 placeholder="Full Name"
                 value={form.name}
@@ -147,12 +186,19 @@ export default function ReceiverManagement() {
                 required
               />
 
+              <input
+                placeholder="Address"
+                value={form.address}
+                onChange={e => setForm({ ...form, address: e.target.value })}
+                required
+              />
+
               <button type="button" onClick={() => setModal(null)}>
                 Cancel
               </button>
 
-              <button type="submit">
-                {editId ? "Update" : "Add"}
+              <button type="submit" disabled={saving}>
+                {saving ? "Adding..." : editId ? "Update" : "Add"}
               </button>
             </form>
           </div>
@@ -167,6 +213,7 @@ export default function ReceiverManagement() {
             <p><b>Name:</b> {modal.name}</p>
             <p><b>Phone:</b> {modal.phone}</p>
             <p><b>Email:</b> {modal.email}</p>
+            <p><b>Address:</b> {modal.address}</p>
             <button onClick={() => setModal(null)}>Close</button>
           </div>
         </div>

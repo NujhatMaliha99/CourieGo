@@ -16,6 +16,8 @@ function ParcelPage() {
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const [createdParcels, setCreatedParcels] = useState([]);
+  const [selectedParcel, setSelectedParcel] = useState(null);
 
   const change = ({ target }) =>
     setForm({ ...form, [target.name]: target.value });
@@ -31,17 +33,15 @@ function ParcelPage() {
     });
 
     const result = await response.json();
-
-    setMessage(
-      response.ok
-        ? `Parcel created. ID: ${result.data.parcel_id}`
-        : result.message
-    );
-
-    if (response.ok) setForm(emptyForm);
-
+    setMessage(response.ok ? `Parcel created. ID: ${result.data.parcel_id}` : result.message);
+    if (response.ok) {
+      setCreatedParcels(parcels => [result.data, ...parcels]);
+      setForm(emptyForm);
+    }
     setSaving(false);
   };
+
+  const placeholder = (action) => setMessage(`${action} will be added by another teammate.`);
 
   return (
     <main>
@@ -133,6 +133,47 @@ function ParcelPage() {
 
         {message && <p className="message">{message}</p>}
       </form>
+
+      {createdParcels.length > 0 && (
+        <section>
+          <h2>Created Parcels</h2>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Tracking ID</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>{createdParcels.map(parcel => (
+                <tr key={parcel.parcel_id}>
+                  <td>{parcel.tracking_id}</td>
+                  <td>{parcel.parcel_type}</td>
+                  <td>{parcel.status.replaceAll('_', ' ')}</td>
+                  <td className="actions">
+                    <button type="button" className="view" onClick={() => setSelectedParcel(parcel)}>View</button>
+                    <button type="button" className="edit" onClick={() => placeholder('Edit')}>Edit</button>
+                    <button type="button" className="delete" onClick={() => placeholder('Delete')}>Delete</button>
+                  </td>
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
+      {selectedParcel && (
+        <div className="overlay" onClick={() => setSelectedParcel(null)}>
+          <article className="details" onClick={event => event.stopPropagation()}>
+            <div className="details-head"><h2>Parcel Details</h2><button type="button" onClick={() => setSelectedParcel(null)}>X</button></div>
+            <dl>
+              <div><dt>Parcel ID</dt><dd>{selectedParcel.parcel_id}</dd></div>
+              <div><dt>Tracking ID</dt><dd>{selectedParcel.tracking_id}</dd></div>
+              <div><dt>Sender ID</dt><dd>{selectedParcel.sender_id}</dd></div>
+              <div><dt>Receiver ID</dt><dd>{selectedParcel.receiver_id}</dd></div>
+              <div><dt>Parcel Type</dt><dd>{selectedParcel.parcel_type}</dd></div>
+              <div><dt>Weight</dt><dd>{selectedParcel.weight} kg</dd></div>
+              <div><dt>Charge</dt><dd>BDT {selectedParcel.charge}</dd></div>
+              <div><dt>Status</dt><dd>{selectedParcel.status.replaceAll('_', ' ')}</dd></div>
+            </dl>
+          </article>
+        </div>
+      )}
     </main>
   );
 }

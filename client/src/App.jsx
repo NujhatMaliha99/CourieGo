@@ -11,6 +11,14 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState('');
 
+  // Read One (Search State)
+  const [searchId, setSearchId] = useState('');
+  const [singleParcel, setSingleParcel] = useState(null);
+  const [searchMessage, setSearchMessage] = useState('');
+
+  // Feature 1: Filter State
+  const [statusFilter, setStatusFilter] = useState('all');
+
   const loadParcels = async () => {
     const response = await fetch('/api/parcels');
     const result = await response.json();
@@ -18,6 +26,18 @@ export default function App() {
   };
 
   useEffect(() => { loadParcels(); }, []);
+
+  const searchParcelById = async (event) => {
+    event.preventDefault();
+    setSingleParcel(null);
+    setSearchMessage('');
+    if (!searchId) return;
+
+    const response = await fetch(`/api/parcels/${searchId}`);
+    const result = await response.json();
+    if (response.ok) setSingleParcel(result.data);
+    else setSearchMessage(result.message || 'Parcel not found.');
+  };
 
   const change = (event) => setForm({ ...form, [event.target.name]: event.target.value });
 
@@ -36,6 +56,9 @@ export default function App() {
       loadParcels();
     }
   };
+
+  // Feature 1: Filter Logic
+  const filteredParcels = parcels.filter(p => statusFilter === 'all' || p.status === statusFilter);
 
   return (
     <main>
@@ -65,21 +88,65 @@ export default function App() {
         </form>
       )}
 
+      {/* READ ONE (Search Box) */}
+      <section className="search-section" style={{ margin: '20px 0', padding: '15px', border: '1px solid #ccc', borderRadius: '5px' }}>
+        <h3>Search Parcel by ID (Read One)</h3>
+        <form onSubmit={searchParcelById} style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+          <input type="number" placeholder="Enter Parcel ID (e.g. 1)" value={searchId} onChange={(e) => setSearchId(e.target.value)} required />
+          <button type="submit">Search</button>
+        </form>
+
+        {singleParcel && (
+          <div style={{ marginTop: '10px', background: '#f0fdf4', padding: '10px', borderRadius: '4px' }}>
+            <p><strong>Parcel ID:</strong> {singleParcel.parcel_id} | <strong>Tracking:</strong> {singleParcel.tracking_id} | <strong>Type:</strong> {singleParcel.parcel_type} | <strong>Weight:</strong> {singleParcel.weight} kg | <strong>Charge:</strong> ৳{singleParcel.charge} | <strong>Status:</strong> {singleParcel.status?.replaceAll('_', ' ')}</p>
+          </div>
+        )}
+        {searchMessage && <p style={{ color: 'red', marginTop: '10px' }}>{searchMessage}</p>}
+      </section>
+
+      {/* READ ALL (Table + Filter) */}
       <section>
-        <h2>Parcels</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2>Parcels</h2>
+          {/*  Status Filter */}
+          <label>Filter: 
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ marginLeft: '5px' }}>
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="picked_up">Picked up</option>
+              <option value="in_transit">In transit</option>
+              <option value="delivered">Delivered</option>
+            </select>
+          </label>
+        </div>
+
         <div className="table-wrap">
           <table>
-            <thead><tr><th>Tracking ID</th><th>Type</th><th>Weight</th><th>Charge</th><th>Status</th></tr></thead>
-            <tbody>{parcels.map(parcel => (
-              <tr key={parcel.parcel_id}>
-                <td>{parcel.tracking_id}</td><td>{parcel.parcel_type}</td>
-                <td>{parcel.weight} kg</td><td>৳{parcel.charge}</td>
-                <td>{parcel.status.replaceAll('_', ' ')}</td>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tracking ID</th>
+                <th>Type</th>
+                <th>Weight</th>
+                <th>Charge</th>
+                <th>Status</th>
               </tr>
-            ))}</tbody>
+            </thead>
+            <tbody>
+              {filteredParcels.map(parcel => (
+                <tr key={parcel.parcel_id}>
+                  <td>{parcel.parcel_id}</td>
+                  <td>{parcel.tracking_id}</td>
+                  <td>{parcel.parcel_type}</td>
+                  <td>{parcel.weight} kg</td>
+                  <td>৳{parcel.charge}</td>
+                  <td>{parcel.status.replaceAll('_', ' ')}</td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
-        {!parcels.length && <p className="empty">No parcels found.</p>}
+        {!filteredParcels.length && <p className="empty">No parcels found.</p>}
       </section>
     </main>
   );

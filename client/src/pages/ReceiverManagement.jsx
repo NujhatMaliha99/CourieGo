@@ -1,12 +1,33 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "./ReceiverManagement.css";
 
 export default function ReceiverManagement() {
-  const [receivers, setReceivers] = useState([
-    { id: 1, name: "John Doe", phone: "01711122334", email: "john@gmail.com", address: "Dhaka" },
-    { id: 2, name: "Jane Smith", phone: "01822233445", email: "jane@gmail.com", address: "Chattogram" },
-  ]);
+  const [receivers, setReceivers] = useState([]);
+
+  const loadReceivers = async () => {
+    try {
+      const response = await fetch('/api/receivers');
+      const result = await response.json();
+      const rows = Array.isArray(result) ? result : result.data || [];
+
+      setReceivers(
+        rows.map(r => ({
+          id: r.receiver_id,
+          name: r.full_name,
+          phone: r.phone,
+          email: r.email || '',
+          address: r.address,
+        }))
+      );
+    } catch (error) {
+      console.error('Error loading receivers:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadReceivers();
+  }, []);
 
   const [search, setSearch] = useState("");
   const emptyForm = { name: "", phone: "", email: "", address: "" };
@@ -24,47 +45,42 @@ export default function ReceiverManagement() {
 
   const save = async e => {
     e.preventDefault();
+    setSaving(true);
 
-    if (editId) {
-      setReceivers(
-        receivers.map(r => r.id === editId ? { ...r, ...form } : r)
-      );
-      setMessage("Receiver updated in the frontend only.");
-    } else {
-      setSaving(true);
-      try {
-        const response = await fetch('/api/receivers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            full_name: form.name,
-            phone: form.phone,
-            email: form.email,
-            address: form.address,
-          }),
-        });
-        const result = await response.json();
+    try {
+      const url = editId ? `/api/receivers/${editId}` : '/api/receivers';
+      const method = editId ? 'PUT' : 'POST';
 
-        if (!response.ok) {
-          setMessage(result.errors?.join(' ') || result.message);
-          return;
-        }
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: form.name,
+          phone: form.phone,
+          email: form.email,
+          address: form.address,
+        }),
+      });
+      const result = await response.json();
 
-        const receiver = result.data;
-        setReceivers(current => [...current, {
-          id: receiver.receiver_id,
-          name: receiver.full_name,
-          phone: receiver.phone,
-          email: receiver.email || '',
-          address: receiver.address,
-        }]);
-        setMessage(`Receiver created. ID: ${receiver.receiver_id}`);
-      } catch {
-        setMessage('Could not connect to the backend.');
+      if (!response.ok) {
+        setMessage(result.errors?.join(' ') || result.message);
         return;
-      } finally {
-        setSaving(false);
       }
+
+      const receiver = result.data;
+
+      if (editId) {
+        setMessage(`Receiver updated. ID: ${receiver.receiver_id}`);
+      } else {
+        setMessage(`Receiver created. ID: ${receiver.receiver_id}`);
+      }
+      loadReceivers();
+    } catch {
+      setMessage('Could not connect to the backend.');
+      return;
+    } finally {
+      setSaving(false);
     }
 
     setForm(emptyForm);
@@ -86,25 +102,25 @@ export default function ReceiverManagement() {
   return (
     <div className="receiver-page">
       <header>
-  <div>
-    <h1>Receiver Management</h1>
-    <p>Manage all receivers in the courier system.</p>
-  </div>
+        <div>
+          <h1>Receiver Management</h1>
+          <p>Manage all receivers in the courier system.</p>
+        </div>
 
-  <div>
-    <Link to="/">
-      <button>Back to Parcel</button>
-    </Link>
+        <div>
+          <Link to="/">
+            <button>Back to Parcel</button>
+          </Link>
 
-    <button onClick={() => {
-      setForm(emptyForm);
-      setEditId(null);
-      setModal("form");
-    }}>
-      + Add Receiver
-    </button>
-  </div>
-</header>
+          <button onClick={() => {
+            setForm(emptyForm);
+            setEditId(null);
+            setModal("form");
+          }}>
+            + Add Receiver
+          </button>
+        </div>
+      </header>
 
       <div className="card">
         {message && <p className="receiver-message">{message}</p>}

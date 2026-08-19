@@ -7,6 +7,5 @@ const router = express.Router();
 router.get('/', parcelController.getAllParcels);
 router.get('/:id', parcelController.getParcelById);
 router.post('/', validateParcel, parcelController.createParcel);
-router.put('/:id', validateParcel, parcelController.updateParcel);
 
 module.exports = router;

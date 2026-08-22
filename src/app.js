@@ -25,10 +25,10 @@ app.use((req, res) => {
 app.use((error, req, res, next) => {
   console.error(error);
 
-  if (error.code === 'ER_DUP_ENTRY') {
+  if (error.number === 2601 || error.number === 2627) {
     return res.status(409).json({ message: 'The tracking_id already exists.' });
   }
-  if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+  if (error.number === 547) {
     return res.status(400).json({ message: 'The sender_id or receiver_id does not exist.' });
   }
 

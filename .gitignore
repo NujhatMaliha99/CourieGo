@@ -4,5 +4,7 @@ dist/
 npm-debug.log*
 server.*.log
 tmp/
+.tmp/
 tools/
 *.docx
+*.log

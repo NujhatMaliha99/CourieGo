@@ -1,12 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./ReceiverManagement.css";
 
 export default function ReceiverManagement() {
-  const [receivers, setReceivers] = useState([
-    { id: 1, name: "John Doe", phone: "01711122334", email: "john@gmail.com", address: "Dhaka" },
-    { id: 2, name: "Jane Smith", phone: "01822233445", email: "jane@gmail.com", address: "Chattogram" },
-  ]);
+  const [receivers, setReceivers] = useState([]);
+
+  const loadReceivers = async () => {
+    try {
+      const response = await fetch('/api/receivers');
+      const result = await response.json();
+      const rows = result.data || [];
+      setReceivers(rows.map(receiver => ({
+        id: receiver.receiver_id,
+        name: receiver.full_name,
+        phone: receiver.phone,
+        email: receiver.email || '',
+        address: receiver.address,
+      })));
+    } catch {
+      setMessage('Could not load receivers from SQL Server.');
+    }
+  };
+
+  useEffect(() => {
+    loadReceivers();
+  }, []);
 
   const [search, setSearch] = useState("");
   const emptyForm = { name: "", phone: "", email: "", address: "" };
@@ -24,47 +42,33 @@ export default function ReceiverManagement() {
 
   const save = async e => {
     e.preventDefault();
+    setSaving(true);
 
-    if (editId) {
-      setReceivers(
-        receivers.map(r => r.id === editId ? { ...r, ...form } : r)
-      );
-      setMessage("Receiver updated in the frontend only.");
-    } else {
-      setSaving(true);
-      try {
-        const response = await fetch('/api/receivers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            full_name: form.name,
-            phone: form.phone,
-            email: form.email,
-            address: form.address,
-          }),
-        });
-        const result = await response.json();
+    try {
+      const response = await fetch(editId ? `/api/receivers/${editId}` : '/api/receivers', {
+        method: editId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: form.name,
+          phone: form.phone,
+          email: form.email,
+          address: form.address,
+        }),
+      });
+      const result = await response.json();
 
-        if (!response.ok) {
-          setMessage(result.errors?.join(' ') || result.message);
-          return;
-        }
-
-        const receiver = result.data;
-        setReceivers(current => [...current, {
-          id: receiver.receiver_id,
-          name: receiver.full_name,
-          phone: receiver.phone,
-          email: receiver.email || '',
-          address: receiver.address,
-        }]);
-        setMessage(`Receiver created. ID: ${receiver.receiver_id}`);
-      } catch {
-        setMessage('Could not connect to the backend.');
+      if (!response.ok) {
+        setMessage(result.errors?.join(' ') || result.message);
         return;
-      } finally {
-        setSaving(false);
       }
+
+      setMessage(`Receiver ${editId ? 'updated' : 'created'}. ID: ${result.data.receiver_id}`);
+      await loadReceivers();
+    } catch {
+      setMessage('Could not connect to the SQL Server backend.');
+      return;
+    } finally {
+      setSaving(false);
     }
 
     setForm(emptyForm);
@@ -198,7 +202,7 @@ export default function ReceiverManagement() {
               </button>
 
               <button type="submit" disabled={saving}>
-                {saving ? "Adding..." : editId ? "Update" : "Add"}
+                {saving ? "Saving..." : editId ? "Update" : "Add"}
               </button>
             </form>
           </div>

@@ -18,6 +18,10 @@ function ParcelPage() {
   const [saving, setSaving] = useState(false);
   const [parcels, setParcels] = useState([]);
   const [selectedParcel, setSelectedParcel] = useState(null);
+  const [editingParcel, setEditingParcel] = useState(null);
+  const [editForm, setEditForm] = useState(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editMessage, setEditMessage] = useState('');
 
   // Read One (Search State)
   const [searchId, setSearchId] = useState('');
@@ -63,6 +67,53 @@ function ParcelPage() {
   const change = ({ target }) =>
     setForm({ ...form, [target.name]: target.value });
 
+  const startEdit = (parcel) => {
+    setEditingParcel(parcel);
+    setEditForm({
+      sender_id: parcel.sender_id,
+      receiver_id: parcel.receiver_id,
+      tracking_id: parcel.tracking_id,
+      parcel_type: parcel.parcel_type,
+      weight: parcel.weight,
+      charge: parcel.charge,
+      status: parcel.status,
+    });
+    setEditMessage('');
+  };
+
+  const editChange = ({ target }) =>
+    setEditForm({ ...editForm, [target.name]: target.value });
+
+  const cancelEdit = () => {
+    setEditingParcel(null);
+    setEditForm(null);
+    setEditMessage('');
+  };
+
+  const submitEdit = async (event) => {
+    event.preventDefault();
+    setEditSaving(true);
+    try {
+      const response = await fetch(`/api/parcels/${editingParcel.parcel_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setEditMessage(result.errors?.join(' ') || result.message);
+        return;
+      }
+      cancelEdit();
+      setMessage(`Parcel updated. ID: ${result.data.parcel_id}`);
+      await loadParcels();
+    } catch {
+      setEditMessage('Could not update parcel in SQL Server.');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const createParcel = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -94,8 +145,7 @@ function ParcelPage() {
   const filteredParcels = parcels.filter(
     (p) => statusFilter === 'all' || p.status === statusFilter
   );
-  const placeholder = (action) =>
-    setMessage(`${action} will be added by another teammate.`);
+  const placeholder = (action) => setMessage(`${action} is not connected yet.`);
 
   return (
     <main>
@@ -283,7 +333,7 @@ function ParcelPage() {
                   <td>{parcel.status?.replaceAll('_', ' ')}</td>
                   <td className="actions">
                     <button type="button" className="view" onClick={() => setSelectedParcel(parcel)}>View</button>
-                    <button type="button" className="edit" onClick={() => placeholder('Edit')}>Edit</button>
+                    <button type="button" className="edit" onClick={() => startEdit(parcel)}>Edit</button>
                     <button type="button" className="delete" onClick={() => placeholder('Delete')}>Delete</button>
                   </td>
                 </tr>
@@ -341,6 +391,35 @@ function ParcelPage() {
                 <dd>{selectedParcel.status?.replaceAll('_', ' ')}</dd>
               </div>
             </dl>
+          </article>
+        </div>
+      )}
+
+      {editingParcel && editForm && (
+        <div className="overlay" onClick={cancelEdit}>
+          <article className="details" onClick={(event) => event.stopPropagation()}>
+            <div className="details-head">
+              <h2>Edit Parcel</h2>
+              <button type="button" onClick={cancelEdit}>X</button>
+            </div>
+            <form onSubmit={submitEdit}>
+              <input name="sender_id" type="number" min="1" value={editForm.sender_id} onChange={editChange} required />
+              <input name="receiver_id" type="number" min="1" value={editForm.receiver_id} onChange={editChange} required />
+              <input name="tracking_id" minLength="3" value={editForm.tracking_id} onChange={editChange} required />
+              <input name="parcel_type" value={editForm.parcel_type} onChange={editChange} required />
+              <input name="weight" type="number" min="0.01" step="0.01" value={editForm.weight} onChange={editChange} required />
+              <input name="charge" type="number" min="0" step="0.01" value={editForm.charge} onChange={editChange} required />
+              <select name="status" value={editForm.status} onChange={editChange}>
+                <option value="pending">Pending</option>
+                <option value="picked_up">Picked up</option>
+                <option value="in_transit">In transit</option>
+                <option value="out_for_delivery">Out for delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+              {editMessage && <p className="message">{editMessage}</p>}
+              <button disabled={editSaving}>{editSaving ? 'Updating...' : 'Update Parcel'}</button>
+            </form>
           </article>
         </div>
       )}

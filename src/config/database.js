@@ -1,15 +1,21 @@
-const mysql = require('mysql2/promise');
+const sql = require('mssql/msnodesqlv8');
 
-// A connection pool reuses database connections for incoming API requests.
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT) || 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+const config = {
+  server: process.env.DB_SERVER || 'DESKTOP-N4MRI66\\SQLEXPRESS',
+  database: process.env.DB_NAME || 'courier_management',
+  driver: 'msnodesqlv8',
+  options: {
+    trustedConnection: true,
+    trustServerCertificate: true,
+  },
+  pool: {
+    max: 10,
+    min: 0,
+    idleTimeoutMillis: 30000,
+  },
+};
 
-module.exports = pool;
+const pool = new sql.ConnectionPool(config);
+const poolPromise = pool.connect();
+
+module.exports = { sql, poolPromise };

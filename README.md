@@ -1,98 +1,71 @@
-# CourieGo Parcel Management
+# CourieGo — Microsoft SQL Server
 
-A minimal courier parcel management project built with React, Vite, Node.js, Express, and MySQL.
+Courier management project using React, Express, raw parameterized T-SQL, and Microsoft SQL Server Express. SQL Server Management Studio (SSMS) is used to inspect and demonstrate the database.
 
-This repository currently contains only the **Create** part of parcel CRUD. Other teammates can add Read, Update, and Delete in separate feature branches.
+## Database
 
-## Features
+- Server: `DESKTOP-N4MRI66\\SQLEXPRESS`
+- Database: `courier_management`
+- Authentication: Windows Authentication
+- Full SSMS scripts: [`database-mssql/`](database-mssql/README.md)
 
-- Create a parcel from the React frontend
-- Store parcel data in MySQL
-- Validate parcel request data
-- Handle duplicate tracking IDs and invalid foreign keys
+Execute the numbered scripts in `database-mssql` when creating the database on another computer.
 
-## Technology
-
-- Node.js
-- Express.js
-- MySQL
-- React and Vite
-
-## Project Structure
+## Application flow
 
 ```text
-database/       MySQL schema
-postman/        Postman collection
-client/         React frontend
-src/config/     MySQL connection
-src/controllers Parcel controller
-src/middleware/ Request validation
-src/routes/     API routes
+React frontend -> Express routes -> parameterized raw T-SQL -> SQL Server
+                                                         -> viewed in SSMS
 ```
+
+The backend uses `mssql/msnodesqlv8` and Windows Authentication. No MySQL installation or password is required.
 
 ## Setup
 
-1. Install Node.js and MySQL Server.
-2. Open MySQL Workbench.
-3. Run [`database/schema.sql`](database/schema.sql).
-4. Copy `.env.example` to `.env`.
-5. Add your MySQL credentials to `.env`:
-
-```env
-PORT=5000
-DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASSWORD=your_mysql_password
-DB_NAME=courier_management
-```
-
-6. Install backend and frontend dependencies:
+1. Install Node.js, SQL Server Express, and SSMS.
+2. Run `database-mssql/01_create_database.sql`, `02_create_tables.sql`, and `03_sample_data.sql` in SSMS.
+3. Install dependencies:
 
 ```powershell
 npm install
 npm --prefix client install
 ```
 
-7. Start the backend:
+4. Start the backend:
 
 ```powershell
 npm start
 ```
 
-8. In another terminal, start React:
+5. Start the frontend in another PowerShell window:
 
 ```powershell
 npm run client
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in a browser.
+Open `http://localhost:5173`.
 
-## API Endpoints
+## Endpoints
 
-| Method | Endpoint | Description |
+| Method | Endpoint | Operation |
 |---|---|---|
-| `POST` | `/api/parcels` | Create a parcel |
-| `GET` | `/api/health` | Check API status |
+| `GET` | `/api/parcels` | Read all parcels |
+| `GET` | `/api/parcels/:id` | Read one parcel |
+| `POST` | `/api/parcels` | Create parcel |
+| `PUT` | `/api/parcels/:id` | Update parcel |
+| `GET` | `/api/receivers` | Read all receivers |
+| `GET` | `/api/receivers/:id` | Read one receiver |
+| `POST` | `/api/receivers` | Create receiver |
+| `PUT` | `/api/receivers/:id` | Update receiver |
 
-## Sample Parcel
+Delete is available as a raw SQL demonstration in the numbered SSMS CRUD scripts.
 
-```json
-{
-  "sender_id": 1,
-  "receiver_id": 1,
-  "tracking_id": "CG-2026-001",
-  "parcel_type": "Documents",
-  "weight": 0.75,
-  "charge": 120,
-  "status": "pending"
-}
+## Optional environment settings
+
+Defaults work on this computer. On another computer, create `.env` with:
+
+```env
+PORT=5000
+DB_SERVER=COMPUTER-NAME\\SQLEXPRESS
+DB_NAME=courier_management
 ```
-
-Allowed statuses: `pending`, `picked_up`, `in_transit`, `out_for_delivery`, `delivered`, and `cancelled`.
-
-## Notes
-
-- The database schema creates sample sender `1` and receiver `1` for parcel testing.
-- `.env` is ignored by Git and must not be uploaded.
-- The included Postman collection can be used to test parcel creation.

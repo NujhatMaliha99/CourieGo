@@ -11,7 +11,9 @@ Open SSMS, connect to the local SQL Server instance, and execute:
 3. `03_sample_data.sql`
 4. `04_parcel_crud.sql` — run one CRUD section at a time
 5. `05_receiver_crud.sql` — run one CRUD section at a time
-6. `06_join_queries.sql`
+6. `06_join_queries.sql` - INNER, LEFT, RIGHT and FULL OUTER JOIN
+7. `07_aggregate_queries.sql` - COUNT, SUM, AVG, MAX, MIN, GROUP BY and HAVING
+8. `08_subqueries.sql` - scalar, IN, NOT EXISTS and correlated subqueries
 
 The first three scripts are safe to run again: they check whether the database, tables, and sample rows already exist.
 

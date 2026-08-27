@@ -1,59 +1,59 @@
 USE courier_management;
 GO
 
--- Parcel details with sender and receiver names.
+-- 1. INNER JOIN
+-- Only parcels that have matching sender and receiver records.
 SELECT
     p.parcel_id,
     p.tracking_id,
     s.full_name AS sender_name,
     r.full_name AS receiver_name,
-    r.phone AS receiver_phone,
     p.parcel_type,
-    p.weight,
-    p.charge,
-    p.status,
-    p.created_at
+    p.status
 FROM dbo.parcels AS p
 INNER JOIN dbo.users AS s
     ON p.sender_id = s.user_id
 INNER JOIN dbo.receivers AS r
     ON p.receiver_id = r.receiver_id
-ORDER BY p.created_at DESC;
+ORDER BY p.parcel_id;
 GO
 
--- Number of parcels grouped by status.
-SELECT
-    status,
-    COUNT(*) AS total_parcels
-FROM dbo.parcels
-GROUP BY status
-ORDER BY total_parcels DESC;
-GO
-
--- Total parcel charge for each receiver.
+-- 2. LEFT OUTER JOIN
+-- Shows every receiver, including receivers who have no parcel.
 SELECT
     r.receiver_id,
-    r.full_name,
-    COUNT(p.parcel_id) AS parcel_count,
-    COALESCE(SUM(p.charge), 0) AS total_charge
+    r.full_name AS receiver_name,
+    p.parcel_id,
+    p.tracking_id,
+    p.status
 FROM dbo.receivers AS r
-LEFT JOIN dbo.parcels AS p
+LEFT OUTER JOIN dbo.parcels AS p
     ON r.receiver_id = p.receiver_id
-GROUP BY r.receiver_id, r.full_name
-ORDER BY total_charge DESC;
+ORDER BY r.receiver_id;
 GO
 
--- Full delivery history for each parcel, when history records exist.
+-- 3. RIGHT OUTER JOIN
+-- Shows every receiver, including receivers who have no parcel.
 SELECT
+    p.parcel_id,
     p.tracking_id,
-    ts.status_name,
-    dh.location,
-    dh.remarks,
-    dh.recorded_at
-FROM dbo.delivery_history AS dh
-INNER JOIN dbo.parcels AS p
-    ON dh.parcel_id = p.parcel_id
-INNER JOIN dbo.tracking_status AS ts
-    ON dh.tracking_status_id = ts.tracking_status_id
-ORDER BY dh.recorded_at DESC;
+    r.receiver_id,
+    r.full_name AS receiver_name
+FROM dbo.parcels AS p
+RIGHT OUTER JOIN dbo.receivers AS r
+    ON p.receiver_id = r.receiver_id
+ORDER BY r.receiver_id;
+GO
+
+-- 4. FULL OUTER JOIN
+-- Shows all parcels and all receivers, whether they match or not.
+SELECT
+    p.parcel_id,
+    p.tracking_id,
+    r.receiver_id,
+    r.full_name AS receiver_name
+FROM dbo.parcels AS p
+FULL OUTER JOIN dbo.receivers AS r
+    ON p.receiver_id = r.receiver_id
+ORDER BY r.receiver_id, p.parcel_id;
 GO

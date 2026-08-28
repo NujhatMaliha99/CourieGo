@@ -8,7 +8,7 @@ Open SSMS, connect to the local SQL Server instance, and execute:
 
 1. `01_create_database.sql`
 2. `02_create_tables.sql`
-3. `03_sample_data.sql`
+3. `03_sample_data.sql` - required roles, sender, and tracking-status reference data only
 4. `04_parcel_crud.sql` — run one CRUD section at a time
 5. `05_receiver_crud.sql` — run one CRUD section at a time
 6. `06_join_queries.sql` - INNER, LEFT, RIGHT and FULL OUTER JOIN

@@ -14,8 +14,13 @@ Open SSMS, connect to the local SQL Server instance, and execute:
 6. `06_join_queries.sql` - INNER, LEFT, RIGHT and FULL OUTER JOIN
 7. `07_aggregate_queries.sql` - COUNT, SUM, AVG, MAX, MIN, GROUP BY and HAVING
 8. `08_subqueries.sql` - scalar, IN, NOT EXISTS and correlated subqueries
+9. `09_next_checkpoint_demo.sql` - complete read-only checkpoint demonstration in one file
 
 The first three scripts are safe to run again: they check whether the database, tables, and sample rows already exist.
+
+For the next checkpoint, create Sender, Receiver, and Parcel records from the frontend,
+then run `09_next_checkpoint_demo.sql` in SSMS. To make OUTER JOIN differences visible,
+create at least one Receiver without creating a Parcel for that Receiver.
 
 ## CRUD mapping
 

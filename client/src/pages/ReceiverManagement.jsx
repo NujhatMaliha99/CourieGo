@@ -83,7 +83,7 @@ export default function ReceiverManagement() {
   };
 
   const remove = () => {
-    setReceivers(receivers.filter(r => r.id !== modal.id));
+    setMessage('Delete is not connected yet.');
     setModal(null);
   };
 

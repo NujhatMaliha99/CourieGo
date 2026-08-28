@@ -40,7 +40,7 @@ ORDER BY r.receiver_id, p.parcel_id;
 GO
 
 -- AGGREGATE FUNCTION: COUNT
--- Counts how many Parcels each Receiver has, including zero.
+-- Counts Parcels per Receiver, then HAVING keeps groups with at least one Parcel.
 SELECT
     r.receiver_id,
     r.full_name AS receiver_name,
@@ -49,6 +49,7 @@ FROM dbo.receivers AS r
 LEFT OUTER JOIN dbo.parcels AS p
     ON r.receiver_id = p.receiver_id
 GROUP BY r.receiver_id, r.full_name
+HAVING COUNT(p.parcel_id) >= 1
 ORDER BY r.receiver_id;
 GO
 

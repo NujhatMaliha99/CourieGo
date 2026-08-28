@@ -8,5 +8,6 @@ router.get('/', senderController.getAllSenders);
 router.get('/:id', senderController.getSenderById);
 router.post('/', validateSender, senderController.createSender);
 router.put('/:id', validateSender, senderController.updateSender);
+router.delete('/:id', senderController.deleteSender);
 
 module.exports = router;

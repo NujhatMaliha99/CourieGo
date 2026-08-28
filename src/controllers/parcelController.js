@@ -71,7 +71,6 @@ async function createParcel(req, res, next) {
     next(error);
   }
 }
-
 async function updateParcel(req, res, next) {
   try {
     const id = Number(req.params.id);
@@ -116,5 +115,38 @@ async function updateParcel(req, res, next) {
     next(error);
   }
 }
+async function deleteParcel(req, res, next) {
+  try {
+    const id = Number(req.params.id);
 
-module.exports = { getAllParcels, getParcelById, createParcel, updateParcel };
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({
+        message: 'Parcel ID must be a positive integer.'
+      });
+    }
+
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .input('parcel_id', sql.Int, id)
+      .query(`
+        DELETE FROM dbo.parcels
+        OUTPUT DELETED.*
+        WHERE parcel_id = @parcel_id
+      `);
+
+    if (!result.recordset.length) {
+      return res.status(404).json({
+        message: 'Parcel not found.'
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Parcel deleted successfully.',
+      data: result.recordset[0],
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+module.exports = { getAllParcels, getParcelById, createParcel, updateParcel, deleteParcel };

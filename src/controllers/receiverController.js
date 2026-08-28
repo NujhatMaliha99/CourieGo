@@ -103,4 +103,45 @@ async function updateReceiver(req, res, next) {
   }
 }
 
-module.exports = { getAllReceivers, getReceiverById, createReceiver, updateReceiver };
+async function deleteReceiver(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({
+        message: 'Receiver ID must be a positive integer.',
+      });
+    }
+
+    const pool = await poolPromise;
+
+    const result = await pool.request()
+      .input('receiver_id', sql.Int, id)
+      .query(`
+        DELETE FROM dbo.receivers
+        OUTPUT DELETED.*
+        WHERE receiver_id = @receiver_id
+      `);
+
+    if (!result.recordset.length) {
+      return res.status(404).json({
+        message: 'Receiver not found.',
+      });
+    }
+
+    return res.status(200).json({
+      message: 'Receiver deleted successfully.',
+      data: result.recordset[0],
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = {
+  getAllReceivers,
+  getReceiverById,
+  createReceiver,
+  updateReceiver,
+  deleteReceiver,
+};

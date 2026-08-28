@@ -55,21 +55,6 @@ export default function SenderManagement() {
     setForm({ full_name: sender.full_name, email: sender.email, phone: sender.phone || '', address: sender.address || '' });
   };
 
-  const remove = async (sender) => {
-    if (!window.confirm(`Delete sender ${sender.full_name}?`)) return;
-    try {
-      const response = await fetch(`/api/senders/${sender.user_id}`, { method: 'DELETE' });
-      const result = await response.json();
-      setMessage(result.message);
-      if (response.ok) {
-        setSelected(null);
-        await loadSenders();
-      }
-    } catch {
-      setMessage('Could not delete sender from SQL Server.');
-    }
-  };
-
   return (
     <div className="receiver-page">
       <header>
@@ -96,7 +81,7 @@ export default function SenderManagement() {
               <td>
                 <button onClick={() => setSelected(sender)}>View</button>
                 <button onClick={() => edit(sender)}>Edit</button>
-                <button className="delete" onClick={() => remove(sender)}>Delete</button>
+                <button className="delete" onClick={() => setMessage('Delete is not connected yet.')}>Delete</button>
               </td>
             </tr>
           ))}</tbody>

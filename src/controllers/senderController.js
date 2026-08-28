@@ -103,28 +103,4 @@ async function updateSender(req, res, next) {
   }
 }
 
-async function deleteSender(req, res, next) {
-  try {
-    const id = Number(req.params.id);
-    if (!Number.isInteger(id) || id <= 0) {
-      return res.status(400).json({ message: 'Sender ID must be a positive integer.' });
-    }
-    const pool = await poolPromise;
-    const result = await pool.request()
-      .input('user_id', sql.Int, id)
-      .query(`
-        DELETE u
-        OUTPUT DELETED.user_id, DELETED.full_name, DELETED.email,
-               DELETED.phone, DELETED.address
-        FROM dbo.users AS u
-        INNER JOIN dbo.roles AS r ON u.role_id = r.role_id
-        WHERE u.user_id = @user_id AND r.role_name = 'customer'
-      `);
-    if (!result.recordset.length) return res.status(404).json({ message: 'Sender not found.' });
-    return res.status(200).json({ message: 'Sender deleted successfully.', data: result.recordset[0] });
-  } catch (error) {
-    next(error);
-  }
-}
-
-module.exports = { getAllSenders, getSenderById, createSender, updateSender, deleteSender };
+module.exports = { getAllSenders, getSenderById, createSender, updateSender };

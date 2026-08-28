@@ -38,3 +38,31 @@ LEFT OUTER JOIN dbo.parcels AS p
     ON r.receiver_id = p.receiver_id
 ORDER BY r.receiver_id, p.parcel_id;
 GO
+
+-- AGGREGATE FUNCTION: COUNT
+-- Counts how many Parcels each Receiver has, including zero.
+SELECT
+    r.receiver_id,
+    r.full_name AS receiver_name,
+    COUNT(p.parcel_id) AS total_parcels
+FROM dbo.receivers AS r
+LEFT OUTER JOIN dbo.parcels AS p
+    ON r.receiver_id = p.receiver_id
+GROUP BY r.receiver_id, r.full_name
+ORDER BY r.receiver_id;
+GO
+
+-- SUBQUERY
+-- The inner query calculates average charge; the outer query returns Parcels above it.
+SELECT
+    parcel_id,
+    tracking_id,
+    parcel_type,
+    charge
+FROM dbo.parcels
+WHERE charge > (
+    SELECT AVG(charge)
+    FROM dbo.parcels
+)
+ORDER BY charge DESC;
+GO

@@ -176,7 +176,7 @@ function ParcelPage() {
   return (
     <main>
       <header>
-        <h1>Create Parcel</h1>
+        <h1>CourieGo - Create Parcel</h1>
         <p>Add a new parcel to the courier database.</p>
 
         <Link to="/receivers">

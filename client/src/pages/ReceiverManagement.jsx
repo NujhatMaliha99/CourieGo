@@ -82,9 +82,18 @@ export default function ReceiverManagement() {
     setModal("form");
   };
 
-  const remove = () => {
-    setReceivers(receivers.filter(r => r.id !== modal.id));
-    setModal(null);
+  const remove = async () => {
+    try {
+      const response = await fetch(`/api/receivers/${modal.id}`, { method: 'DELETE' });
+      const result = await response.json();
+      setMessage(result.message);
+      if (response.ok) {
+        await loadReceivers();
+        setModal(null);
+      }
+    } catch {
+      setMessage('Could not delete receiver from SQL Server.');
+    }
   };
 
   return (

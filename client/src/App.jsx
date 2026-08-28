@@ -171,7 +171,20 @@ function ParcelPage() {
   const filteredParcels = parcels.filter(
     (p) => statusFilter === 'all' || p.status === statusFilter
   );
-  const placeholder = (action) => setMessage(`${action} is not connected yet.`);
+  const deleteParcel = async (parcel) => {
+    if (!window.confirm(`Delete parcel ${parcel.tracking_id}?`)) return;
+    try {
+      const response = await fetch(`/api/parcels/${parcel.parcel_id}`, { method: 'DELETE' });
+      const result = await response.json();
+      setMessage(result.message);
+      if (response.ok) {
+        setSelectedParcel(null);
+        await loadParcels();
+      }
+    } catch {
+      setMessage('Could not delete parcel from SQL Server.');
+    }
+  };
 
   return (
     <main>
@@ -364,7 +377,7 @@ function ParcelPage() {
                   <td className="actions">
                     <button type="button" className="view" onClick={() => setSelectedParcel(parcel)}>View</button>
                     <button type="button" className="edit" onClick={() => startEdit(parcel)}>Edit</button>
-                    <button type="button" className="delete" onClick={() => placeholder('Delete')}>Delete</button>
+                    <button type="button" className="delete" onClick={() => deleteParcel(parcel)}>Delete</button>
                   </td>
                 </tr>
               ))}

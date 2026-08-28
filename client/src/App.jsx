@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ReceiverManagement from './pages/ReceiverManagement';
 import SenderManagement from './pages/SenderManagement';
-import DatabaseCheckpoint from './pages/DatabaseCheckpoint';
 
 const emptyForm = {
   sender_id: 1,
@@ -186,10 +185,6 @@ function ParcelPage() {
         {' '}
         <Link to="/senders">
           <button>Sender Management</button>
-        </Link>
-        {' '}
-        <Link to="/checkpoint">
-          <button>Database Checkpoint</button>
         </Link>
       </header>
 
@@ -473,7 +468,6 @@ export default function App() {
         <Route path="/" element={<ParcelPage />} />
         <Route path="/receivers" element={<ReceiverManagement />} />
         <Route path="/senders" element={<SenderManagement />} />
-        <Route path="/checkpoint" element={<DatabaseCheckpoint />} />
       </Routes>
     </BrowserRouter>
   );

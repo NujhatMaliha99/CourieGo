@@ -14,7 +14,7 @@ Open SSMS, connect to the local SQL Server instance, and execute:
 6. `06_join_queries.sql` - INNER, LEFT, RIGHT and FULL OUTER JOIN
 7. `07_aggregate_queries.sql` - COUNT, SUM, AVG, MAX, MIN, GROUP BY and HAVING
 8. `08_subqueries.sql` - scalar, IN, NOT EXISTS and correlated subqueries
-9. `09_next_checkpoint_demo.sql` - complete read-only checkpoint demonstration in one file
+9. `09_next_checkpoint_demo.sql` - complete read-only SSMS checkpoint demonstration in one file
 
 The first three scripts are safe to run again: they check whether the database, tables, and sample rows already exist.
 

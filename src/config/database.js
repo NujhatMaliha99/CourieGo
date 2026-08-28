@@ -1,7 +1,7 @@
 const sql = require('mssql/msnodesqlv8');
 
 const config = {
-  server: process.env.DB_SERVER || 'DESKTOP-N4MRI66\\SQLEXPRESS',
+  server: process.env.DB_SERVER || 'DESKTOP-NCANRTK\SQLEXPRESS',
   database: process.env.DB_NAME || 'courier_management',
   driver: 'msnodesqlv8',
   options: {

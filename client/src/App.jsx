@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+
 import ReceiverManagement from './pages/ReceiverManagement';
+
 import SenderManagement from './pages/SenderManagement';
 
 const emptyForm = {
@@ -50,16 +53,29 @@ function ParcelPage() {
         fetch('/api/senders'),
         fetch('/api/receivers'),
       ]);
+
       const senderResult = await senderResponse.json();
       const receiverResult = await receiverResponse.json();
+
       const senderRows = senderResult.data || [];
       const receiverRows = receiverResult.data || [];
+
       setSenders(senderRows);
       setReceivers(receiverRows);
+
       setForm((current) => ({
         ...current,
-        sender_id: senderRows.some((row) => String(row.user_id) === String(current.sender_id)) ? current.sender_id : senderRows[0]?.user_id || '',
-        receiver_id: receiverRows.some((row) => String(row.receiver_id) === String(current.receiver_id)) ? current.receiver_id : receiverRows[0]?.receiver_id || '',
+        sender_id: senderRows.some(
+          (row) => String(row.user_id) === String(current.sender_id)
+        )
+          ? current.sender_id
+          : senderRows[0]?.user_id || '',
+
+        receiver_id: receiverRows.some(
+          (row) => String(row.receiver_id) === String(current.receiver_id)
+        )
+          ? current.receiver_id
+          : receiverRows[0]?.receiver_id || '',
       }));
     } catch {
       setMessage('Could not load sender or receiver list.');
@@ -75,11 +91,13 @@ function ParcelPage() {
     event.preventDefault();
     setSingleParcel(null);
     setSearchMessage('');
+
     if (!searchId) return;
 
     try {
       const response = await fetch(`/api/parcels/${searchId}`);
       const result = await response.json();
+
       if (response.ok) {
         setSingleParcel(result.data || result);
       } else {
@@ -95,6 +113,7 @@ function ParcelPage() {
 
   const startEdit = (parcel) => {
     setEditingParcel(parcel);
+
     setEditForm({
       sender_id: parcel.sender_id,
       receiver_id: parcel.receiver_id,
@@ -104,6 +123,7 @@ function ParcelPage() {
       charge: parcel.charge,
       status: parcel.status,
     });
+
     setEditMessage('');
   };
 
@@ -119,19 +139,28 @@ function ParcelPage() {
   const submitEdit = async (event) => {
     event.preventDefault();
     setEditSaving(true);
+
     try {
-      const response = await fetch(`/api/parcels/${editingParcel.parcel_id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editForm),
-      });
+      const response = await fetch(
+        `/api/parcels/${editingParcel.parcel_id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(editForm),
+        }
+      );
+
       const result = await response.json();
+
       if (!response.ok) {
         setEditMessage(result.errors?.join(' ') || result.message);
         return;
       }
+
       cancelEdit();
+
       setMessage(`Parcel updated. ID: ${result.data.parcel_id}`);
+
       await loadParcels();
     } catch {
       setEditMessage('Could not update parcel in SQL Server.');
@@ -152,37 +181,73 @@ function ParcelPage() {
       });
 
       const result = await response.json();
+
       setMessage(
         response.ok
           ? `Parcel created. ID: ${result.data?.parcel_id || result.data?.id}`
           : result.message
       );
+
       if (response.ok) {
-        setForm((current) => ({ ...emptyForm, sender_id: current.sender_id, receiver_id: current.receiver_id }));
+        setForm((current) => ({
+          ...emptyForm,
+          sender_id: current.sender_id,
+          receiver_id: current.receiver_id,
+        }));
+
         await loadParcels();
       }
     } catch (error) {
       setMessage('Failed to create parcel.');
     }
+
     setSaving(false);
+  };
+
+  // DELETE PARCEL
+  const deleteParcel = async (parcelId) => {
+    if (!window.confirm('Are you sure you want to delete this parcel?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/parcels/${parcelId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setMessage(result.message || 'Failed to delete parcel.');
+        return;
+      }
+
+      setMessage('Parcel deleted successfully.');
+
+      await loadParcels();
+    } catch {
+      setMessage('Could not connect to the SQL Server backend.');
+    }
   };
 
   // Feature 1: Filter Logic
   const filteredParcels = parcels.filter(
     (p) => statusFilter === 'all' || p.status === statusFilter
   );
-  const placeholder = (action) => setMessage(`${action} is not connected yet.`);
 
   return (
     <main>
       <header>
         <h1>CourieGo - Create Parcel</h1>
+
         <p>Add a new parcel to the courier database.</p>
 
         <Link to="/receivers">
           <button>Receiver Management</button>
         </Link>
+
         {' '}
+
         <Link to="/senders">
           <button>Sender Management</button>
         </Link>
@@ -196,7 +261,12 @@ function ParcelPage() {
           required
         >
           <option value="">Select Sender</option>
-          {senders.map((sender) => <option key={sender.user_id} value={sender.user_id}>{sender.user_id} - {sender.full_name}</option>)}
+
+          {senders.map((sender) => (
+            <option key={sender.user_id} value={sender.user_id}>
+              {sender.user_id} - {sender.full_name}
+            </option>
+          ))}
         </select>
 
         <select
@@ -206,7 +276,15 @@ function ParcelPage() {
           required
         >
           <option value="">Select Receiver</option>
-          {receivers.map((receiver) => <option key={receiver.receiver_id} value={receiver.receiver_id}>{receiver.receiver_id} - {receiver.full_name}</option>)}
+
+          {receivers.map((receiver) => (
+            <option
+              key={receiver.receiver_id}
+              value={receiver.receiver_id}
+            >
+              {receiver.receiver_id} - {receiver.full_name}
+            </option>
+          ))}
         </select>
 
         <input
@@ -248,7 +326,11 @@ function ParcelPage() {
           required
         />
 
-        <select name="status" value={form.status} onChange={change}>
+        <select
+          name="status"
+          value={form.status}
+          onChange={change}
+        >
           <option value="pending">Pending</option>
           <option value="picked_up">Picked up</option>
           <option value="in_transit">In transit</option>
@@ -265,6 +347,7 @@ function ParcelPage() {
       </form>
 
       {/* READ ONE (Search Box) */}
+
       <section
         className="search-section"
         style={{
@@ -275,9 +358,14 @@ function ParcelPage() {
         }}
       >
         <h3>Search Parcel by ID (Read One)</h3>
+
         <form
           onSubmit={searchParcelById}
-          style={{ display: 'flex', gap: '10px', marginTop: '10px' }}
+          style={{
+            display: 'flex',
+            gap: '10px',
+            marginTop: '10px',
+          }}
         >
           <input
             type="number"
@@ -286,6 +374,7 @@ function ParcelPage() {
             onChange={(e) => setSearchId(e.target.value)}
             required
           />
+
           <button type="submit">Search</button>
         </form>
 
@@ -299,21 +388,36 @@ function ParcelPage() {
             }}
           >
             <p>
-              <strong>Parcel ID:</strong> {singleParcel.parcel_id || singleParcel.id} |{' '}
-              <strong>Tracking:</strong> {singleParcel.tracking_id} |{' '}
-              <strong>Type:</strong> {singleParcel.parcel_type} |{' '}
-              <strong>Weight:</strong> {singleParcel.weight} kg |{' '}
-              <strong>Charge:</strong> BDT {singleParcel.charge} |{' '}
-              <strong>Status:</strong> {singleParcel.status?.replaceAll('_', ' ')}
+              <strong>Parcel ID:</strong>{' '}
+              {singleParcel.parcel_id || singleParcel.id} |{' '}
+
+              <strong>Tracking:</strong>{' '}
+              {singleParcel.tracking_id} |{' '}
+
+              <strong>Type:</strong>{' '}
+              {singleParcel.parcel_type} |{' '}
+
+              <strong>Weight:</strong>{' '}
+              {singleParcel.weight} kg |{' '}
+
+              <strong>Charge:</strong>{' '}
+              BDT {singleParcel.charge} |{' '}
+
+              <strong>Status:</strong>{' '}
+              {singleParcel.status?.replaceAll('_', ' ')}
             </p>
           </div>
         )}
+
         {searchMessage && (
-          <p style={{ color: 'red', marginTop: '10px' }}>{searchMessage}</p>
+          <p style={{ color: 'red', marginTop: '10px' }}>
+            {searchMessage}
+          </p>
         )}
       </section>
 
       {/* READ ALL (Table + Filter) */}
+
       <section>
         <div
           style={{
@@ -323,8 +427,10 @@ function ParcelPage() {
           }}
         >
           <h2>Parcels</h2>
+
           <label>
             Filter:
+
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -352,73 +458,147 @@ function ParcelPage() {
                 <th>Actions</th>
               </tr>
             </thead>
+
             <tbody>
               {filteredParcels.map((parcel, index) => (
-                <tr key={parcel.parcel_id || parcel.id || index}>
-                  <td>{parcel.parcel_id || parcel.id}</td>
+                <tr
+                  key={
+                    parcel.parcel_id ||
+                    parcel.id ||
+                    index
+                  }
+                >
+                  <td>
+                    {parcel.parcel_id || parcel.id}
+                  </td>
+
                   <td>{parcel.tracking_id}</td>
+
                   <td>{parcel.parcel_type}</td>
+
                   <td>{parcel.weight} kg</td>
+
                   <td>BDT {parcel.charge}</td>
-                  <td>{parcel.status?.replaceAll('_', ' ')}</td>
+
+                  <td>
+                    {parcel.status?.replaceAll('_', ' ')}
+                  </td>
+
                   <td className="actions">
-                    <button type="button" className="view" onClick={() => setSelectedParcel(parcel)}>View</button>
-                    <button type="button" className="edit" onClick={() => startEdit(parcel)}>Edit</button>
-                    <button type="button" className="delete" onClick={() => placeholder('Delete')}>Delete</button>
+                    <button
+                      type="button"
+                      className="view"
+                      onClick={() =>
+                        setSelectedParcel(parcel)
+                      }
+                    >
+                      View
+                    </button>
+
+                    <button
+                      type="button"
+                      className="edit"
+                      onClick={() => startEdit(parcel)}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      className="delete"
+                      onClick={() =>
+                        deleteParcel(
+                          parcel.parcel_id || parcel.id
+                        )
+                      }
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {!filteredParcels.length && <p className="empty">No parcels found.</p>}
+
+        {!filteredParcels.length && (
+          <p className="empty">No parcels found.</p>
+        )}
       </section>
 
       {/* Modal / Overlay */}
+
       {selectedParcel && (
-        <div className="overlay" onClick={() => setSelectedParcel(null)}>
+        <div
+          className="overlay"
+          onClick={() => setSelectedParcel(null)}
+        >
           <article
             className="details"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
             <div className="details-head">
               <h2>Parcel Details</h2>
-              <button type="button" onClick={() => setSelectedParcel(null)}>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedParcel(null)
+                }
+              >
                 X
               </button>
             </div>
+
             <dl>
               <div>
                 <dt>Parcel ID</dt>
-                <dd>{selectedParcel.parcel_id || selectedParcel.id}</dd>
+                <dd>
+                  {selectedParcel.parcel_id ||
+                    selectedParcel.id}
+                </dd>
               </div>
+
               <div>
                 <dt>Tracking ID</dt>
                 <dd>{selectedParcel.tracking_id}</dd>
               </div>
+
               <div>
                 <dt>Sender ID</dt>
                 <dd>{selectedParcel.sender_id}</dd>
               </div>
+
               <div>
                 <dt>Receiver ID</dt>
                 <dd>{selectedParcel.receiver_id}</dd>
               </div>
+
               <div>
                 <dt>Parcel Type</dt>
                 <dd>{selectedParcel.parcel_type}</dd>
               </div>
+
               <div>
                 <dt>Weight</dt>
                 <dd>{selectedParcel.weight} kg</dd>
               </div>
+
               <div>
                 <dt>Charge</dt>
                 <dd>BDT {selectedParcel.charge}</dd>
               </div>
+
               <div>
                 <dt>Status</dt>
-                <dd>{selectedParcel.status?.replaceAll('_', ' ')}</dd>
+                <dd>
+                  {selectedParcel.status?.replaceAll(
+                    '_',
+                    ' '
+                  )}
+                </dd>
               </div>
             </dl>
           </article>
@@ -426,33 +606,138 @@ function ParcelPage() {
       )}
 
       {editingParcel && editForm && (
-        <div className="overlay" onClick={cancelEdit}>
-          <article className="details" onClick={(event) => event.stopPropagation()}>
+        <div
+          className="overlay"
+          onClick={cancelEdit}
+        >
+          <article
+            className="details"
+            onClick={(event) =>
+              event.stopPropagation()
+            }
+          >
             <div className="details-head">
               <h2>Edit Parcel</h2>
-              <button type="button" onClick={cancelEdit}>X</button>
+
+              <button
+                type="button"
+                onClick={cancelEdit}
+              >
+                X
+              </button>
             </div>
+
             <form onSubmit={submitEdit}>
-              <select name="sender_id" value={editForm.sender_id} onChange={editChange} required>
-                {senders.map((sender) => <option key={sender.user_id} value={sender.user_id}>{sender.user_id} - {sender.full_name}</option>)}
+              <select
+                name="sender_id"
+                value={editForm.sender_id}
+                onChange={editChange}
+                required
+              >
+                {senders.map((sender) => (
+                  <option
+                    key={sender.user_id}
+                    value={sender.user_id}
+                  >
+                    {sender.user_id} -{' '}
+                    {sender.full_name}
+                  </option>
+                ))}
               </select>
-              <select name="receiver_id" value={editForm.receiver_id} onChange={editChange} required>
-                {receivers.map((receiver) => <option key={receiver.receiver_id} value={receiver.receiver_id}>{receiver.receiver_id} - {receiver.full_name}</option>)}
+
+              <select
+                name="receiver_id"
+                value={editForm.receiver_id}
+                onChange={editChange}
+                required
+              >
+                {receivers.map((receiver) => (
+                  <option
+                    key={receiver.receiver_id}
+                    value={receiver.receiver_id}
+                  >
+                    {receiver.receiver_id} -{' '}
+                    {receiver.full_name}
+                  </option>
+                ))}
               </select>
-              <input name="tracking_id" minLength="3" value={editForm.tracking_id} onChange={editChange} required />
-              <input name="parcel_type" value={editForm.parcel_type} onChange={editChange} required />
-              <input name="weight" type="number" min="0.01" step="0.01" value={editForm.weight} onChange={editChange} required />
-              <input name="charge" type="number" min="0" step="0.01" value={editForm.charge} onChange={editChange} required />
-              <select name="status" value={editForm.status} onChange={editChange}>
-                <option value="pending">Pending</option>
-                <option value="picked_up">Picked up</option>
-                <option value="in_transit">In transit</option>
-                <option value="out_for_delivery">Out for delivery</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+
+              <input
+                name="tracking_id"
+                minLength="3"
+                value={editForm.tracking_id}
+                onChange={editChange}
+                required
+              />
+
+              <input
+                name="parcel_type"
+                value={editForm.parcel_type}
+                onChange={editChange}
+                required
+              />
+
+              <input
+                name="weight"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={editForm.weight}
+                onChange={editChange}
+                required
+              />
+
+              <input
+                name="charge"
+                type="number"
+                min="0"
+                step="0.01"
+                value={editForm.charge}
+                onChange={editChange}
+                required
+              />
+
+              <select
+                name="status"
+                value={editForm.status}
+                onChange={editChange}
+              >
+                <option value="pending">
+                  Pending
+                </option>
+
+                <option value="picked_up">
+                  Picked up
+                </option>
+
+                <option value="in_transit">
+                  In transit
+                </option>
+
+                <option value="out_for_delivery">
+                  Out for delivery
+                </option>
+
+                <option value="delivered">
+                  Delivered
+                </option>
+
+                <option value="cancelled">
+                  Cancelled
+                </option>
               </select>
-              {editMessage && <p className="message">{editMessage}</p>}
-              <button disabled={editSaving}>{editSaving ? 'Updating...' : 'Update Parcel'}</button>
+
+              {editMessage && (
+                <p className="message">
+                  {editMessage}
+                </p>
+              )}
+
+              <button disabled={editSaving}>
+                {editSaving
+                  ? 'Updating...'
+                  : 'Update Parcel'}
+              </button>
             </form>
           </article>
         </div>
@@ -465,9 +750,20 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ParcelPage />} />
-        <Route path="/receivers" element={<ReceiverManagement />} />
-        <Route path="/senders" element={<SenderManagement />} />
+        <Route
+          path="/"
+          element={<ParcelPage />}
+        />
+
+        <Route
+          path="/receivers"
+          element={<ReceiverManagement />}
+        />
+
+        <Route
+          path="/senders"
+          element={<SenderManagement />}
+        />
       </Routes>
     </BrowserRouter>
   );

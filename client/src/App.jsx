@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ReceiverManagement from './pages/ReceiverManagement';
+import SenderManagement from './pages/SenderManagement';
 
 const emptyForm = {
   sender_id: 1,
@@ -22,6 +23,8 @@ function ParcelPage() {
   const [editForm, setEditForm] = useState(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editMessage, setEditMessage] = useState('');
+  const [senders, setSenders] = useState([]);
+  const [receivers, setReceivers] = useState([]);
 
   // Read One (Search State)
   const [searchId, setSearchId] = useState('');
@@ -41,8 +44,31 @@ function ParcelPage() {
     }
   };
 
+  const loadForeignKeyOptions = async () => {
+    try {
+      const [senderResponse, receiverResponse] = await Promise.all([
+        fetch('/api/senders'),
+        fetch('/api/receivers'),
+      ]);
+      const senderResult = await senderResponse.json();
+      const receiverResult = await receiverResponse.json();
+      const senderRows = senderResult.data || [];
+      const receiverRows = receiverResult.data || [];
+      setSenders(senderRows);
+      setReceivers(receiverRows);
+      setForm((current) => ({
+        ...current,
+        sender_id: senderRows.some((row) => String(row.user_id) === String(current.sender_id)) ? current.sender_id : senderRows[0]?.user_id || '',
+        receiver_id: receiverRows.some((row) => String(row.receiver_id) === String(current.receiver_id)) ? current.receiver_id : receiverRows[0]?.receiver_id || '',
+      }));
+    } catch {
+      setMessage('Could not load sender or receiver list.');
+    }
+  };
+
   useEffect(() => {
     loadParcels();
+    loadForeignKeyOptions();
   }, []);
 
   const searchParcelById = async (event) => {
@@ -132,7 +158,7 @@ function ParcelPage() {
           : result.message
       );
       if (response.ok) {
-        setForm(emptyForm);
+        setForm((current) => ({ ...emptyForm, sender_id: current.sender_id, receiver_id: current.receiver_id }));
         await loadParcels();
       }
     } catch (error) {
@@ -156,28 +182,32 @@ function ParcelPage() {
         <Link to="/receivers">
           <button>Receiver Management</button>
         </Link>
+        {' '}
+        <Link to="/senders">
+          <button>Sender Management</button>
+        </Link>
       </header>
 
       <form onSubmit={createParcel}>
-        <input
+        <select
           name="sender_id"
-          type="number"
-          min="1"
           value={form.sender_id}
           onChange={change}
-          placeholder="Sender ID"
           required
-        />
+        >
+          <option value="">Select Sender</option>
+          {senders.map((sender) => <option key={sender.user_id} value={sender.user_id}>{sender.user_id} - {sender.full_name}</option>)}
+        </select>
 
-        <input
+        <select
           name="receiver_id"
-          type="number"
-          min="1"
           value={form.receiver_id}
           onChange={change}
-          placeholder="Receiver ID"
           required
-        />
+        >
+          <option value="">Select Receiver</option>
+          {receivers.map((receiver) => <option key={receiver.receiver_id} value={receiver.receiver_id}>{receiver.receiver_id} - {receiver.full_name}</option>)}
+        </select>
 
         <input
           name="tracking_id"
@@ -403,8 +433,12 @@ function ParcelPage() {
               <button type="button" onClick={cancelEdit}>X</button>
             </div>
             <form onSubmit={submitEdit}>
-              <input name="sender_id" type="number" min="1" value={editForm.sender_id} onChange={editChange} required />
-              <input name="receiver_id" type="number" min="1" value={editForm.receiver_id} onChange={editChange} required />
+              <select name="sender_id" value={editForm.sender_id} onChange={editChange} required>
+                {senders.map((sender) => <option key={sender.user_id} value={sender.user_id}>{sender.user_id} - {sender.full_name}</option>)}
+              </select>
+              <select name="receiver_id" value={editForm.receiver_id} onChange={editChange} required>
+                {receivers.map((receiver) => <option key={receiver.receiver_id} value={receiver.receiver_id}>{receiver.receiver_id} - {receiver.full_name}</option>)}
+              </select>
               <input name="tracking_id" minLength="3" value={editForm.tracking_id} onChange={editChange} required />
               <input name="parcel_type" value={editForm.parcel_type} onChange={editChange} required />
               <input name="weight" type="number" min="0.01" step="0.01" value={editForm.weight} onChange={editChange} required />
@@ -433,6 +467,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<ParcelPage />} />
         <Route path="/receivers" element={<ReceiverManagement />} />
+        <Route path="/senders" element={<SenderManagement />} />
       </Routes>
     </BrowserRouter>
   );

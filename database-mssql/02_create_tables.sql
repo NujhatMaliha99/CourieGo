@@ -1,5 +1,4 @@
 USE courier_management;
-GO
 
 IF OBJECT_ID('dbo.roles', 'U') IS NULL
 BEGIN
@@ -10,7 +9,6 @@ BEGIN
         CONSTRAINT UQ_roles_role_name UNIQUE (role_name)
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.users', 'U') IS NULL
 BEGIN
@@ -27,7 +25,6 @@ BEGIN
         CONSTRAINT FK_users_role FOREIGN KEY (role_id) REFERENCES dbo.roles(role_id)
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.login', 'U') IS NULL
 BEGIN
@@ -42,7 +39,6 @@ BEGIN
             REFERENCES dbo.users(user_id) ON DELETE CASCADE
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.receivers', 'U') IS NULL
 BEGIN
@@ -55,7 +51,6 @@ BEGIN
         CONSTRAINT PK_receivers PRIMARY KEY (receiver_id)
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.parcels', 'U') IS NULL
 BEGIN
@@ -82,7 +77,6 @@ BEGIN
         ))
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.payments', 'U') IS NULL
 BEGIN
@@ -100,7 +94,6 @@ BEGIN
         CONSTRAINT CK_payments_status CHECK (payment_status IN ('unpaid', 'paid', 'failed', 'refunded'))
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.delivery_agents', 'U') IS NULL
 BEGIN
@@ -119,7 +112,6 @@ BEGIN
         )
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.assignments', 'U') IS NULL
 BEGIN
@@ -136,7 +128,6 @@ BEGIN
             REFERENCES dbo.delivery_agents(agent_id)
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.tracking_status', 'U') IS NULL
 BEGIN
@@ -148,7 +139,6 @@ BEGIN
         CONSTRAINT UQ_tracking_status_name UNIQUE (status_name)
     );
 END;
-GO
 
 IF OBJECT_ID('dbo.delivery_history', 'U') IS NULL
 BEGIN
@@ -167,4 +157,3 @@ BEGIN
             REFERENCES dbo.tracking_status(tracking_status_id)
     );
 END;
-GO

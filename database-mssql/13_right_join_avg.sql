@@ -25,13 +25,13 @@ GO
 -- =========================================================
 -- 2. AVG AGGREGATE FUNCTION WITH RIGHT JOIN (Weight Analysis)
 -- Calculates the average parcel weight (AVG) per sender.
--- Uses COALESCE to show 0 for senders without parcels.
+-- Uses ISNULL to show 0 for senders without parcels.
 -- =========================================================
 SELECT
     u.user_id AS sender_id,
     u.full_name AS sender_name,
     COUNT(p.parcel_id) AS total_parcels,
-    COALESCE(AVG(p.weight), 0) AS average_weight_kg
+    ISNULL(AVG(p.weight), 0) AS average_weight_kg
 FROM dbo.parcels AS p
 RIGHT JOIN dbo.users AS u
     ON p.sender_id = u.user_id

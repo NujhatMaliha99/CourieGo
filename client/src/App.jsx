@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
-
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-
 import ReceiverManagement from './pages/ReceiverManagement';
-
 import SenderManagement from './pages/SenderManagement';
 
 const emptyForm = {
@@ -37,6 +34,13 @@ function ParcelPage() {
   // Feature 1: Filter State
   const [statusFilter, setStatusFilter] = useState('all');
 
+  // Analytics States (All 5 Queries)
+  const [receiverSummary, setReceiverSummary] = useState([]);
+  const [statusSummary, setStatusSummary] = useState([]);
+  const [senderSummary, setSenderSummary] = useState([]);
+  const [frequentReceivers, setFrequentReceivers] = useState([]);
+  const [aboveAverageParcels, setAboveAverageParcels] = useState([]);
+
   const loadParcels = async () => {
     try {
       const response = await fetch('/api/parcels');
@@ -57,8 +61,8 @@ function ParcelPage() {
       const senderResult = await senderResponse.json();
       const receiverResult = await receiverResponse.json();
 
-      const senderRows = senderResult.data || [];
-      const receiverRows = receiverResult.data || [];
+      const senderRows = senderResult.data || senderResult || [];
+      const receiverRows = receiverResult.data || receiverResult || [];
 
       setSenders(senderRows);
       setReceivers(receiverRows);
@@ -82,9 +86,37 @@ function ParcelPage() {
     }
   };
 
+  // Fetch Analytics Data (Updated for all 5 queries)
+  const loadAnalytics = async () => {
+    try {
+      const [res1, res2, res3, res4, res5] = await Promise.all([
+        fetch('/api/analytics/receiver-charge-summary'),
+        fetch('/api/analytics/parcel-status-summary'),
+        fetch('/api/analytics/sender-activity-summary'),
+        fetch('/api/analytics/frequent-receivers'),
+        fetch('/api/analytics/above-average-charge-parcels'),
+      ]);
+
+      const data1 = await res1.json();
+      const data2 = await res2.json();
+      const data3 = await res3.json();
+      const data4 = await res4.json();
+      const data5 = await res5.json();
+
+      setReceiverSummary(Array.isArray(data1) ? data1 : data1.data || []);
+      setStatusSummary(Array.isArray(data2) ? data2 : data2.data || []);
+      setSenderSummary(Array.isArray(data3) ? data3 : data3.data || []);
+      setFrequentReceivers(Array.isArray(data4) ? data4 : data4.data || []);
+      setAboveAverageParcels(Array.isArray(data5) ? data5 : data5.data || []);
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+    }
+  };
+
   useEffect(() => {
     loadParcels();
     loadForeignKeyOptions();
+    loadAnalytics();
   }, []);
 
   const searchParcelById = async (event) => {
@@ -158,10 +190,10 @@ function ParcelPage() {
       }
 
       cancelEdit();
-
-      setMessage(`Parcel updated. ID: ${result.data.parcel_id}`);
+      setMessage(`Parcel updated. ID: ${result.data?.parcel_id || editingParcel.parcel_id}`);
 
       await loadParcels();
+      await loadAnalytics();
     } catch {
       setEditMessage('Could not update parcel in SQL Server.');
     } finally {
@@ -196,6 +228,7 @@ function ParcelPage() {
         }));
 
         await loadParcels();
+        await loadAnalytics();
       }
     } catch (error) {
       setMessage('Failed to create parcel.');
@@ -204,7 +237,6 @@ function ParcelPage() {
     setSaving(false);
   };
 
-  // DELETE PARCEL
   const deleteParcel = async (parcelId) => {
     if (!window.confirm('Are you sure you want to delete this parcel?')) {
       return;
@@ -225,12 +257,12 @@ function ParcelPage() {
       setMessage('Parcel deleted successfully.');
 
       await loadParcels();
+      await loadAnalytics();
     } catch {
       setMessage('Could not connect to the SQL Server backend.');
     }
   };
 
-  // Feature 1: Filter Logic
   const filteredParcels = parcels.filter(
     (p) => statusFilter === 'all' || p.status === statusFilter
   );
@@ -239,15 +271,12 @@ function ParcelPage() {
     <main>
       <header>
         <h1>CourieGo - Create Parcel</h1>
-
         <p>Add a new parcel to the courier database.</p>
 
         <Link to="/receivers">
           <button>Receiver Management</button>
         </Link>
-
         {' '}
-
         <Link to="/senders">
           <button>Sender Management</button>
         </Link>
@@ -261,7 +290,6 @@ function ParcelPage() {
           required
         >
           <option value="">Select Sender</option>
-
           {senders.map((sender) => (
             <option key={sender.user_id} value={sender.user_id}>
               {sender.user_id} - {sender.full_name}
@@ -276,7 +304,6 @@ function ParcelPage() {
           required
         >
           <option value="">Select Receiver</option>
-
           {receivers.map((receiver) => (
             <option
               key={receiver.receiver_id}
@@ -347,7 +374,6 @@ function ParcelPage() {
       </form>
 
       {/* READ ONE (Search Box) */}
-
       <section
         className="search-section"
         style={{
@@ -390,19 +416,14 @@ function ParcelPage() {
             <p>
               <strong>Parcel ID:</strong>{' '}
               {singleParcel.parcel_id || singleParcel.id} |{' '}
-
               <strong>Tracking:</strong>{' '}
               {singleParcel.tracking_id} |{' '}
-
               <strong>Type:</strong>{' '}
               {singleParcel.parcel_type} |{' '}
-
               <strong>Weight:</strong>{' '}
               {singleParcel.weight} kg |{' '}
-
               <strong>Charge:</strong>{' '}
               BDT {singleParcel.charge} |{' '}
-
               <strong>Status:</strong>{' '}
               {singleParcel.status?.replaceAll('_', ' ')}
             </p>
@@ -417,7 +438,6 @@ function ParcelPage() {
       </section>
 
       {/* READ ALL (Table + Filter) */}
-
       <section>
         <div
           style={{
@@ -430,7 +450,6 @@ function ParcelPage() {
 
           <label>
             Filter:
-
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -471,15 +490,10 @@ function ParcelPage() {
                   <td>
                     {parcel.parcel_id || parcel.id}
                   </td>
-
                   <td>{parcel.tracking_id}</td>
-
                   <td>{parcel.parcel_type}</td>
-
                   <td>{parcel.weight} kg</td>
-
                   <td>BDT {parcel.charge}</td>
-
                   <td>
                     {parcel.status?.replaceAll('_', ' ')}
                   </td>
@@ -526,8 +540,154 @@ function ParcelPage() {
         )}
       </section>
 
-      {/* Modal / Overlay */}
+      {/* ANALYTICS & SQL REPORTS SECTION (All 5 Tables) */}
+      <section style={{ marginTop: '40px', paddingTop: '20px', borderTop: '2px solid #008080' }}>
+        <h2 style={{ color: '#008080' }}>Analytics & Reports Summary</h2>
 
+        {/* Table 1: Receiver Charge Summary (RIGHT JOIN) */}
+        <div style={{ marginTop: '20px', marginBottom: '30px' }}>
+          <h3>1. Receiver Spending Summary (RIGHT JOIN)</h3>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Receiver ID</th>
+                  <th>Receiver Name</th>
+                  <th>Address</th>
+                  <th>Total Parcels</th>
+                  <th>Total Spent (BDT)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {receiverSummary.map((item, idx) => (
+                  <tr key={item.receiver_id || idx}>
+                    <td>{item.receiver_id}</td>
+                    <td>{item.receiver_name}</td>
+                    <td>{item.receiver_address || 'N/A'}</td>
+                    <td>{item.total_parcels_received}</td>
+                    <td>BDT {item.total_charge_spent}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!receiverSummary.length && <p className="empty">No summary available.</p>}
+        </div>
+
+        {/* Table 2: Status Breakdown (Aggregates) */}
+        <div style={{ marginBottom: '30px' }}>
+          <h3>2. Parcel Status Metrics Breakdown (Aggregates)</h3>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Total Parcels</th>
+                  <th>Average Charge</th>
+                  <th>Max Weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                {statusSummary.map((item, idx) => (
+                  <tr key={idx}>
+                    <td style={{ textTransform: 'capitalize' }}>{item.status?.replaceAll('_', ' ')}</td>
+                    <td>{item.total_parcels}</td>
+                    <td>BDT {Number(item.avg_charge || 0).toFixed(2)}</td>
+                    <td>{item.max_weight} kg</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!statusSummary.length && <p className="empty">No status metrics available.</p>}
+        </div>
+
+        {/* Table 3: Sender Activity Summary (INNER JOIN) */}
+        <div style={{ marginBottom: '30px' }}>
+          <h3>3. Sender Activity Summary (INNER JOIN)</h3>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Sender ID</th>
+                  <th>Sender Name</th>
+                  <th>Total Sent Parcels</th>
+                  <th>Total Revenue (BDT)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {senderSummary.map((item, idx) => (
+                  <tr key={item.sender_id || idx}>
+                    <td>{item.sender_id}</td>
+                    <td>{item.sender_name}</td>
+                    <td>{item.total_sent_parcels}</td>
+                    <td>BDT {item.total_revenue_generated}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!senderSummary.length && <p className="empty">No sender metrics available.</p>}
+        </div>
+
+        {/* Table 4: Frequent Receivers (HAVING) */}
+        <div style={{ marginBottom: '30px' }}>
+          <h3>4. Frequent Receivers (HAVING Clause)</h3>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Receiver ID</th>
+                  <th>Receiver Name</th>
+                  <th>Total Parcels Received</th>
+                </tr>
+              </thead>
+              <tbody>
+                {frequentReceivers.map((item, idx) => (
+                  <tr key={item.receiver_id || idx}>
+                    <td>{item.receiver_id}</td>
+                    <td>{item.receiver_name}</td>
+                    <td>{item.total_parcels}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!frequentReceivers.length && <p className="empty">No frequent receivers found.</p>}
+        </div>
+
+        {/* Table 5: Parcels Above Average Charge (Subquery) */}
+        <div style={{ marginBottom: '30px' }}>
+          <h3>5. Parcels Charged Above Average (Subquery)</h3>
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Parcel ID</th>
+                  <th>Tracking ID</th>
+                  <th>Type</th>
+                  <th>Charge (BDT)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {aboveAverageParcels.map((item, idx) => (
+                  <tr key={item.parcel_id || idx}>
+                    <td>{item.parcel_id}</td>
+                    <td>{item.tracking_id}</td>
+                    <td>{item.parcel_type}</td>
+                    <td>BDT {item.charge}</td>
+                    <td style={{ textTransform: 'capitalize' }}>{item.status?.replaceAll('_', ' ')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!aboveAverageParcels.length && <p className="empty">No above average parcels found.</p>}
+        </div>
+      </section>
+
+      {/* Modal / Overlay */}
       {selectedParcel && (
         <div
           className="overlay"
@@ -702,29 +862,12 @@ function ParcelPage() {
                 value={editForm.status}
                 onChange={editChange}
               >
-                <option value="pending">
-                  Pending
-                </option>
-
-                <option value="picked_up">
-                  Picked up
-                </option>
-
-                <option value="in_transit">
-                  In transit
-                </option>
-
-                <option value="out_for_delivery">
-                  Out for delivery
-                </option>
-
-                <option value="delivered">
-                  Delivered
-                </option>
-
-                <option value="cancelled">
-                  Cancelled
-                </option>
+                <option value="pending">Pending</option>
+                <option value="picked_up">Picked up</option>
+                <option value="in_transit">In transit</option>
+                <option value="out_for_delivery">Out for delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
               </select>
 
               {editMessage && (

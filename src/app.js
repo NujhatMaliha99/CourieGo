@@ -3,6 +3,7 @@ const cors = require('cors');
 const parcelRoutes = require('./routes/parcelRoutes');
 const receiverRoutes = require('./routes/receiverRoutes');
 const senderRoutes = require('./routes/senderRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/parcels', parcelRoutes);
 app.use('/api/receivers', receiverRoutes);
 app.use('/api/senders', senderRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Return a clear response for unknown endpoints.
 app.use((req, res) => {

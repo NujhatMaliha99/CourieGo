@@ -34,7 +34,7 @@ HAVING SUM(p.charge) > (
 )
 ORDER BY total_revenue DESC;
 
--- 2.FREQUENT SENDER-RECEIVER PAIRS
+-- 2. SENDER-RECEIVER PAIRS
 
 SELECT
     s.user_id AS sender_id,
@@ -46,7 +46,7 @@ SELECT
 FROM dbo.users AS s
 FULL JOIN dbo.parcels AS p
     ON s.user_id = p.sender_id
-FULL  JOIN dbo.receivers AS r
+FULL JOIN dbo.receivers AS r
     ON p.receiver_id = r.receiver_id
 GROUP BY s.user_id, s.full_name, r.receiver_id, r.full_name
 HAVING COUNT(p.parcel_id) >= 1

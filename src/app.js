@@ -4,10 +4,10 @@ const parcelRoutes = require('./routes/parcelRoutes');
 const receiverRoutes = require('./routes/receiverRoutes');
 const senderRoutes = require('./routes/senderRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const customReportRoutes = require('./routes/customReportRoutes');
 
 const app = express();
 
-// Enable frontend access and parse JSON request bodies.
 app.use(cors());
 app.use(express.json());
 
@@ -19,13 +19,12 @@ app.use('/api/parcels', parcelRoutes);
 app.use('/api/receivers', receiverRoutes);
 app.use('/api/senders', senderRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/custom-reports', customReportRoutes);
 
-// Return a clear response for unknown endpoints.
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found.' });
 });
 
-// Central error handler keeps controller error responses consistent.
 app.use((error, req, res, next) => {
   console.error(error);
 

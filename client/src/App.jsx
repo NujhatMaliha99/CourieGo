@@ -6,6 +6,7 @@ import ReportPage from "./pages/ReportPage";
 import CustomQueryReports from "./pages/CustomQueryReports";
 
 import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
+import AggregateReports from './pages/AggregateReports';
 
 const emptyForm = {
   sender_id: 1,
@@ -296,7 +297,24 @@ function ParcelPage() {
         <Link to="/sql-queries">
           <button>SQL Query</button>
         </Link>
+       {' '}
 
+<Link to="/aggregate-reports">
+  <button
+    style={{
+      backgroundColor: '#4db6ac',
+      color: '#fff',
+      border: 'none',
+      borderRadius: '4px',
+      padding: '8px 14px',
+      cursor: 'pointer',
+      fontSize: '14px',
+      fontWeight: '500'
+    }}
+  >
+    Aggregate Reports
+  </button>
+</Link>
       </header>
 
       <form onSubmit={createParcel}>
@@ -698,7 +716,7 @@ export default function App() {
           path="/sql-queries"
           element={<InnerLeftSqlReports />}
         />
-
+      <Route path="/aggregate-reports" element={<AggregateReports />} />
       </Routes>
     </BrowserRouter>
   );

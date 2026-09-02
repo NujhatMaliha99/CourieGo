@@ -6,6 +6,8 @@ import ReceiverManagement from './pages/ReceiverManagement';
 
 import SenderManagement from './pages/SenderManagement';
 
+import ReportPage from "./pages/ReportPage";
+
 const emptyForm = {
   sender_id: 1,
   receiver_id: 1,
@@ -251,6 +253,13 @@ function ParcelPage() {
         <Link to="/senders">
           <button>Sender Management</button>
         </Link>
+        
+         {' '}
+
+        <Link to="/reports">
+          <button>Sender-ReceiverReports</button>
+        </Link>
+
       </header>
 
       <form onSubmit={createParcel}>
@@ -764,6 +773,12 @@ export default function App() {
           path="/senders"
           element={<SenderManagement />}
         />
+
+        <Route
+          path="/reports"
+          element={<ReportPage  />}
+        />
+
       </Routes>
     </BrowserRouter>
   );

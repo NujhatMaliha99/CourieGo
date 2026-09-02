@@ -13,7 +13,28 @@ FULL JOIN dbo.parcels AS p
 GROUP BY s.user_id, s.full_name
 ORDER BY total_charge DESC;
 
--- 2.FREQUENT SENDER-RECEIVER PAIRS
+--Subquery
+
+SELECT
+    s.user_id AS sender_id,
+    s.full_name AS sender_name,
+    COUNT(p.parcel_id) AS total_parcels,
+    SUM(p.charge) AS total_revenue
+FROM dbo.users AS s
+FULL JOIN dbo.parcels AS p
+    ON s.user_id = p.sender_id
+GROUP BY s.user_id, s.full_name
+HAVING SUM(p.charge) > (
+    SELECT AVG(total_charge)
+    FROM (
+        SELECT SUM(charge) AS total_charge
+        FROM dbo.parcels
+        GROUP BY sender_id
+    ) AS r
+)
+ORDER BY total_revenue DESC;
+
+-- 2. SENDER-RECEIVER PAIRS
 
 SELECT
     s.user_id AS sender_id,
@@ -25,7 +46,7 @@ SELECT
 FROM dbo.users AS s
 FULL JOIN dbo.parcels AS p
     ON s.user_id = p.sender_id
-FULL  JOIN dbo.receivers AS r
+FULL JOIN dbo.receivers AS r
     ON p.receiver_id = r.receiver_id
 GROUP BY s.user_id, s.full_name, r.receiver_id, r.full_name
 HAVING COUNT(p.parcel_id) >= 1
@@ -43,7 +64,7 @@ FULL JOIN dbo.parcels AS p
 GROUP BY r.address
 ORDER BY total_parcels DESC;
 
--- 4) SUSPICIOUS RECEIVER DETECTION 
+-- 4. SUSPICIOUS RECEIVER DETECTION 
 
 SELECT
     r.receiver_id,
@@ -57,7 +78,7 @@ GROUP BY r.receiver_id, r.full_name, r.phone
 HAVING COUNT(p.parcel_id) > 5
 ORDER BY total_parcels_received DESC;
 
--- 5) ZERO-ACTIVITY SENDERS / RECEIVERS
+-- 5. ZERO-ACTIVITY SENDERS / RECEIVERS
 
 SELECT
     s.user_id AS sender_id,
@@ -97,7 +118,7 @@ GROUP BY s.user_id, s.full_name
 HAVING COUNT(p.parcel_id) >= 1
 ORDER BY avg_weight DESC;
 
--- 8.FULL REPORT
+-- 7.FULL REPORT
 
 SELECT
     s.user_id AS sender_id,

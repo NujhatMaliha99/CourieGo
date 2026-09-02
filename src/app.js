@@ -4,6 +4,7 @@ const parcelRoutes = require('./routes/parcelRoutes');
 const receiverRoutes = require('./routes/receiverRoutes');
 const senderRoutes = require('./routes/senderRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const innerLeftReportRoutes = require('./routes/innerLeftReportRoutes');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.use('/api/parcels', parcelRoutes);
 app.use('/api/receivers', receiverRoutes);
 app.use('/api/senders', senderRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/sql-queries', innerLeftReportRoutes);
 
 // Return a clear response for unknown endpoints.
 app.use((req, res) => {

@@ -3,9 +3,12 @@ require('dotenv').config();
 const app = require('./app');
 const { poolPromise } = require('./config/database');
 
+const customReportRoutes = require('./routes/customReportRoutes');
+
 const PORT = Number(process.env.PORT) || 5000;
 
-// Check the database before accepting API requests.
+app.use('/api/custom-reports', customReportRoutes);
+
 async function startServer() {
   try {
     await poolPromise;

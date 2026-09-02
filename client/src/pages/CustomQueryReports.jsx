@@ -17,12 +17,12 @@ const CustomQueryReports = () => {
     const fetchReports = async () => {
       try {
         const [res1, res2, res3, res4, res5, res6] = await Promise.all([
-          fetch('http://localhost:5000/api/reports/distinct-sender-avg-charge'),
-          fetch('http://localhost:5000/api/reports/receiver-weight-analysis'),
-          fetch('http://localhost:5000/api/reports/status-summary'),
-          fetch('http://localhost:5000/api/reports/receivers-above-avg-weight'),
-          fetch('http://localhost:5000/api/reports/sender-charge-analysis'),
-          fetch('http://localhost:5000/api/reports/receiver-address-summary')
+          fetch('http://localhost:5000/api/custom-reports/distinct-sender-avg-charge'),
+          fetch('http://localhost:5000/api/custom-reports/receiver-weight-analysis'),
+          fetch('http://localhost:5000/api/custom-reports/status-summary'),
+          fetch('http://localhost:5000/api/custom-reports/receivers-above-avg-weight'),
+          fetch('http://localhost:5000/api/custom-reports/sender-charge-analysis'),
+          fetch('http://localhost:5000/api/custom-reports/receiver-address-summary')
         ]);
 
         const [d1, d2, d3, d4, d5, d6] = await Promise.all([

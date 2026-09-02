@@ -274,7 +274,7 @@ function ParcelPage() {
             fontWeight: '500'
           }}>Sender-ReceiverReports</button>
         </Link>{' '}
-        <Link to="/custom-analytics">
+        <Link to="/custom-reports">
           <button style={{ 
             backgroundColor: '#4db6ac', 
             color: '#fff',
@@ -285,7 +285,7 @@ function ParcelPage() {
             fontSize: '14px',
             fontWeight: '500'
           }}>
-            My Custom Analytics
+            Custom Reports
           </button>
         </Link>
       </header>
@@ -664,7 +664,7 @@ export default function App() {
         <Route path="/receivers" element={<ReceiverManagement />} />
         <Route path="/senders" element={<SenderManagement />} />
         <Route path="/reports" element={<ReportPage />} />
-        <Route path="/custom-analytics" element={<CustomQueryReports />} />
+        <Route path="/custom-reports" element={<CustomQueryReports />} />
       </Routes>
     </BrowserRouter>
   );

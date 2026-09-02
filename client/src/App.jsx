@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
-
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-
 import ReceiverManagement from './pages/ReceiverManagement';
-
 import SenderManagement from './pages/SenderManagement';
-
 import ReportPage from "./pages/ReportPage";
+import CustomQueryReports from "./pages/CustomQueryReports";
 
 const emptyForm = {
   sender_id: 1,
@@ -206,7 +203,6 @@ function ParcelPage() {
     setSaving(false);
   };
 
-  // DELETE PARCEL
   const deleteParcel = async (parcelId) => {
     if (!window.confirm('Are you sure you want to delete this parcel?')) {
       return;
@@ -232,7 +228,6 @@ function ParcelPage() {
     }
   };
 
-  // Feature 1: Filter Logic
   const filteredParcels = parcels.filter(
     (p) => statusFilter === 'all' || p.status === statusFilter
   );
@@ -241,25 +236,58 @@ function ParcelPage() {
     <main>
       <header>
         <h1>CourieGo - Create Parcel</h1>
-
         <p>Add a new parcel to the courier database.</p>
 
         <Link to="/receivers">
-          <button>Receiver Management</button>
-        </Link>
-
-        {' '}
-
+          <button style={{
+            backgroundColor: '#4db6ac',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>Receiver Management</button>
+        </Link>{' '}
         <Link to="/senders">
-          <button>Sender Management</button>
-        </Link>
-        
-         {' '}
-
+          <button style={{
+            backgroundColor: '#4db6ac',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>Sender Management</button>
+        </Link>{' '}
         <Link to="/reports">
-          <button>Sender-ReceiverReports</button>
+          <button style={{
+            backgroundColor: '#4db6ac',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>Sender-ReceiverReports</button>
+        </Link>{' '}
+        <Link to="/custom-analytics">
+          <button style={{ 
+            backgroundColor: '#4db6ac', 
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>
+            My Custom Analytics
+          </button>
         </Link>
-
       </header>
 
       <form onSubmit={createParcel}>
@@ -270,7 +298,6 @@ function ParcelPage() {
           required
         >
           <option value="">Select Sender</option>
-
           {senders.map((sender) => (
             <option key={sender.user_id} value={sender.user_id}>
               {sender.user_id} - {sender.full_name}
@@ -285,12 +312,8 @@ function ParcelPage() {
           required
         >
           <option value="">Select Receiver</option>
-
           {receivers.map((receiver) => (
-            <option
-              key={receiver.receiver_id}
-              value={receiver.receiver_id}
-            >
+            <option key={receiver.receiver_id} value={receiver.receiver_id}>
               {receiver.receiver_id} - {receiver.full_name}
             </option>
           ))}
@@ -335,11 +358,7 @@ function ParcelPage() {
           required
         />
 
-        <select
-          name="status"
-          value={form.status}
-          onChange={change}
-        >
+        <select name="status" value={form.status} onChange={change}>
           <option value="pending">Pending</option>
           <option value="picked_up">Picked up</option>
           <option value="in_transit">In transit</option>
@@ -356,7 +375,6 @@ function ParcelPage() {
       </form>
 
       {/* READ ONE (Search Box) */}
-
       <section
         className="search-section"
         style={{
@@ -370,11 +388,7 @@ function ParcelPage() {
 
         <form
           onSubmit={searchParcelById}
-          style={{
-            display: 'flex',
-            gap: '10px',
-            marginTop: '10px',
-          }}
+          style={{ display: 'flex', gap: '10px', marginTop: '10px' }}
         >
           <input
             type="number"
@@ -383,7 +397,6 @@ function ParcelPage() {
             onChange={(e) => setSearchId(e.target.value)}
             required
           />
-
           <button type="submit">Search</button>
         </form>
 
@@ -397,36 +410,22 @@ function ParcelPage() {
             }}
           >
             <p>
-              <strong>Parcel ID:</strong>{' '}
-              {singleParcel.parcel_id || singleParcel.id} |{' '}
-
-              <strong>Tracking:</strong>{' '}
-              {singleParcel.tracking_id} |{' '}
-
-              <strong>Type:</strong>{' '}
-              {singleParcel.parcel_type} |{' '}
-
-              <strong>Weight:</strong>{' '}
-              {singleParcel.weight} kg |{' '}
-
-              <strong>Charge:</strong>{' '}
-              BDT {singleParcel.charge} |{' '}
-
-              <strong>Status:</strong>{' '}
-              {singleParcel.status?.replaceAll('_', ' ')}
+              <strong>Parcel ID:</strong> {singleParcel.parcel_id || singleParcel.id} |{' '}
+              <strong>Tracking:</strong> {singleParcel.tracking_id} |{' '}
+              <strong>Type:</strong> {singleParcel.parcel_type} |{' '}
+              <strong>Weight:</strong> {singleParcel.weight} kg |{' '}
+              <strong>Charge:</strong> BDT {singleParcel.charge} |{' '}
+              <strong>Status:</strong> {singleParcel.status?.replaceAll('_', ' ')}
             </p>
           </div>
         )}
 
         {searchMessage && (
-          <p style={{ color: 'red', marginTop: '10px' }}>
-            {searchMessage}
-          </p>
+          <p style={{ color: 'red', marginTop: '10px' }}>{searchMessage}</p>
         )}
       </section>
 
       {/* READ ALL (Table + Filter) */}
-
       <section>
         <div
           style={{
@@ -439,7 +438,6 @@ function ParcelPage() {
 
           <label>
             Filter:
-
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -470,40 +468,21 @@ function ParcelPage() {
 
             <tbody>
               {filteredParcels.map((parcel, index) => (
-                <tr
-                  key={
-                    parcel.parcel_id ||
-                    parcel.id ||
-                    index
-                  }
-                >
-                  <td>
-                    {parcel.parcel_id || parcel.id}
-                  </td>
-
+                <tr key={parcel.parcel_id || parcel.id || index}>
+                  <td>{parcel.parcel_id || parcel.id}</td>
                   <td>{parcel.tracking_id}</td>
-
                   <td>{parcel.parcel_type}</td>
-
                   <td>{parcel.weight} kg</td>
-
                   <td>BDT {parcel.charge}</td>
-
-                  <td>
-                    {parcel.status?.replaceAll('_', ' ')}
-                  </td>
-
+                  <td>{parcel.status?.replaceAll('_', ' ')}</td>
                   <td className="actions">
                     <button
                       type="button"
                       className="view"
-                      onClick={() =>
-                        setSelectedParcel(parcel)
-                      }
+                      onClick={() => setSelectedParcel(parcel)}
                     >
                       View
                     </button>
-
                     <button
                       type="button"
                       className="edit"
@@ -511,14 +490,11 @@ function ParcelPage() {
                     >
                       Edit
                     </button>
-
                     <button
                       type="button"
                       className="delete"
                       onClick={() =>
-                        deleteParcel(
-                          parcel.parcel_id || parcel.id
-                        )
+                        deleteParcel(parcel.parcel_id || parcel.id)
                       }
                     >
                       Delete
@@ -530,108 +506,64 @@ function ParcelPage() {
           </table>
         </div>
 
-        {!filteredParcels.length && (
-          <p className="empty">No parcels found.</p>
-        )}
+        {!filteredParcels.length && <p className="empty">No parcels found.</p>}
       </section>
 
-      {/* Modal / Overlay */}
-
+      {/* View Modal */}
       {selectedParcel && (
-        <div
-          className="overlay"
-          onClick={() => setSelectedParcel(null)}
-        >
-          <article
-            className="details"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
+        <div className="overlay" onClick={() => setSelectedParcel(null)}>
+          <article className="details" onClick={(e) => e.stopPropagation()}>
             <div className="details-head">
               <h2>Parcel Details</h2>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setSelectedParcel(null)
-                }
-              >
+              <button type="button" onClick={() => setSelectedParcel(null)}>
                 X
               </button>
             </div>
-
             <dl>
               <div>
                 <dt>Parcel ID</dt>
-                <dd>
-                  {selectedParcel.parcel_id ||
-                    selectedParcel.id}
-                </dd>
+                <dd>{selectedParcel.parcel_id || selectedParcel.id}</dd>
               </div>
-
               <div>
                 <dt>Tracking ID</dt>
                 <dd>{selectedParcel.tracking_id}</dd>
               </div>
-
               <div>
                 <dt>Sender ID</dt>
                 <dd>{selectedParcel.sender_id}</dd>
               </div>
-
               <div>
                 <dt>Receiver ID</dt>
                 <dd>{selectedParcel.receiver_id}</dd>
               </div>
-
               <div>
                 <dt>Parcel Type</dt>
                 <dd>{selectedParcel.parcel_type}</dd>
               </div>
-
               <div>
                 <dt>Weight</dt>
                 <dd>{selectedParcel.weight} kg</dd>
               </div>
-
               <div>
                 <dt>Charge</dt>
                 <dd>BDT {selectedParcel.charge}</dd>
               </div>
-
               <div>
                 <dt>Status</dt>
-                <dd>
-                  {selectedParcel.status?.replaceAll(
-                    '_',
-                    ' '
-                  )}
-                </dd>
+                <dd>{selectedParcel.status?.replaceAll('_', ' ')}</dd>
               </div>
             </dl>
           </article>
         </div>
       )}
 
+      {/* Edit Modal */}
       {editingParcel && editForm && (
-        <div
-          className="overlay"
-          onClick={cancelEdit}
-        >
-          <article
-            className="details"
-            onClick={(event) =>
-              event.stopPropagation()
-            }
-          >
+        <div className="overlay" onClick={cancelEdit}>
+          <article className="details" onClick={(e) => e.stopPropagation()}>
             <div className="details-head">
               <h2>Edit Parcel</h2>
-
-              <button
-                type="button"
-                onClick={cancelEdit}
-              >
+              <button type="button" onClick={cancelEdit}>
                 X
               </button>
             </div>
@@ -644,12 +576,8 @@ function ParcelPage() {
                 required
               >
                 {senders.map((sender) => (
-                  <option
-                    key={sender.user_id}
-                    value={sender.user_id}
-                  >
-                    {sender.user_id} -{' '}
-                    {sender.full_name}
+                  <option key={sender.user_id} value={sender.user_id}>
+                    {sender.user_id} - {sender.full_name}
                   </option>
                 ))}
               </select>
@@ -665,8 +593,7 @@ function ParcelPage() {
                     key={receiver.receiver_id}
                     value={receiver.receiver_id}
                   >
-                    {receiver.receiver_id} -{' '}
-                    {receiver.full_name}
+                    {receiver.receiver_id} - {receiver.full_name}
                   </option>
                 ))}
               </select>
@@ -678,14 +605,12 @@ function ParcelPage() {
                 onChange={editChange}
                 required
               />
-
               <input
                 name="parcel_type"
                 value={editForm.parcel_type}
                 onChange={editChange}
                 required
               />
-
               <input
                 name="weight"
                 type="number"
@@ -695,7 +620,6 @@ function ParcelPage() {
                 onChange={editChange}
                 required
               />
-
               <input
                 name="charge"
                 type="number"
@@ -711,41 +635,18 @@ function ParcelPage() {
                 value={editForm.status}
                 onChange={editChange}
               >
-                <option value="pending">
-                  Pending
-                </option>
-
-                <option value="picked_up">
-                  Picked up
-                </option>
-
-                <option value="in_transit">
-                  In transit
-                </option>
-
-                <option value="out_for_delivery">
-                  Out for delivery
-                </option>
-
-                <option value="delivered">
-                  Delivered
-                </option>
-
-                <option value="cancelled">
-                  Cancelled
-                </option>
+                <option value="pending">Pending</option>
+                <option value="picked_up">Picked up</option>
+                <option value="in_transit">In transit</option>
+                <option value="out_for_delivery">Out for delivery</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
               </select>
 
-              {editMessage && (
-                <p className="message">
-                  {editMessage}
-                </p>
-              )}
+              {editMessage && <p className="message">{editMessage}</p>}
 
               <button disabled={editSaving}>
-                {editSaving
-                  ? 'Updating...'
-                  : 'Update Parcel'}
+                {editSaving ? 'Updating...' : 'Update Parcel'}
               </button>
             </form>
           </article>
@@ -759,26 +660,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={<ParcelPage />}
-        />
-
-        <Route
-          path="/receivers"
-          element={<ReceiverManagement />}
-        />
-
-        <Route
-          path="/senders"
-          element={<SenderManagement />}
-        />
-
-        <Route
-          path="/reports"
-          element={<ReportPage  />}
-        />
-
+        <Route path="/" element={<ParcelPage />} />
+        <Route path="/receivers" element={<ReceiverManagement />} />
+        <Route path="/senders" element={<SenderManagement />} />
+        <Route path="/reports" element={<ReportPage />} />
+        <Route path="/custom-analytics" element={<CustomQueryReports />} />
       </Routes>
     </BrowserRouter>
   );

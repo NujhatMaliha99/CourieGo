@@ -5,6 +5,7 @@ const receiverRoutes = require('./routes/receiverRoutes');
 const senderRoutes = require('./routes/senderRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const customReportRoutes = require('./routes/customReportRoutes');
+const innerLeftReportRoutes = require('./routes/innerLeftReportRoutes');
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use('/api/receivers', receiverRoutes);
 app.use('/api/senders', senderRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/custom-reports', customReportRoutes);
+app.use('/api/sql-queries', innerLeftReportRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found.' });

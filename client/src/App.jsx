@@ -5,6 +5,8 @@ import SenderManagement from './pages/SenderManagement';
 import ReportPage from "./pages/ReportPage";
 import CustomQueryReports from "./pages/CustomQueryReports";
 
+import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
+
 const emptyForm = {
   sender_id: 1,
   receiver_id: 1,
@@ -288,6 +290,13 @@ function ParcelPage() {
             Custom Reports
           </button>
         </Link>
+
+        {' '}
+
+        <Link to="/sql-queries">
+          <button>SQL Query</button>
+        </Link>
+
       </header>
 
       <form onSubmit={createParcel}>
@@ -665,6 +674,31 @@ export default function App() {
         <Route path="/senders" element={<SenderManagement />} />
         <Route path="/reports" element={<ReportPage />} />
         <Route path="/custom-reports" element={<CustomQueryReports />} />
+        <Route
+          path="/"
+          element={<ParcelPage />}
+        />
+
+        <Route
+          path="/receivers"
+          element={<ReceiverManagement />}
+        />
+
+        <Route
+          path="/senders"
+          element={<SenderManagement />}
+        />
+
+        <Route
+          path="/reports"
+          element={<ReportPage  />}
+        />
+
+        <Route
+          path="/sql-queries"
+          element={<InnerLeftSqlReports />}
+        />
+
       </Routes>
     </BrowserRouter>
   );

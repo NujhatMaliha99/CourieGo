@@ -8,6 +8,7 @@ import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
 import AggregateReports from './pages/AggregateReports';
 import Chatbot from "./pages/Chatbot";
 import SqlConceptsPage from './pages/SqlConceptsPage';
+import ExtraFeaturesPage from './pages/ExtraFeaturesPage'; 
 const emptyForm = {
   sender_id: 1,
   receiver_id: 1,
@@ -194,7 +195,6 @@ function ParcelPage() {
   );
   return (
     <main>
-      <header>
         <h1>CourieGo - Create Parcel</h1>
         <p>Add a new parcel to the courier database.</p>
         <Link to="/receivers">
@@ -273,7 +273,21 @@ function ParcelPage() {
             <button type="button">UNION, VIEW &amp; PROCEDURE</button>
           </Link>
         </div>
-      </header>
+        <div style={{ marginTop: '12px' }}>
+          <Link to="/sql-advanced">
+            <button type="button" style={{
+              backgroundColor: '#4db6ac',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '8px 14px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>Advanced SQL (Trigger & Transaction)</button>
+          </Link>
+        </div>
+
       <form onSubmit={createParcel}>
         <select
           name="sender_id"
@@ -294,7 +308,6 @@ function ParcelPage() {
           onChange={change}
           required
         >
-          <option value="">Select Receiver</option>
           {receivers.map((receiver) => (
             <option key={receiver.receiver_id} value={receiver.receiver_id}>
               {receiver.receiver_id} - {receiver.full_name}
@@ -814,7 +827,8 @@ export default function App() {
         <Route path="/sql-queries" element={<InnerLeftSqlReports />} />
         <Route path="/aggregate-reports" element={<AggregateReports />} />
         <Route path="/chatbot" element={<Chatbot />} />
-        <Route path="/sql-concepts" element={<SqlConceptsPage />} />
+        <Route path="/sql-concepts" element={<SqlConceptsPage />} /> 
+        <Route path="/sql-advanced" element={<ExtraFeaturesPage />} /> 
       </Routes>
 
       <FloatingChat />

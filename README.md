@@ -24,6 +24,7 @@ The backend uses `mssql/msnodesqlv8` and Windows Authentication. No MySQL instal
 
 1. Install Node.js, SQL Server Express, and SSMS.
 2. Run `database-mssql/01_create_database.sql`, `02_create_tables.sql`, and `03_sample_data.sql` in SSMS.
+   To use the UNION, VIEW & PROCEDURE page, also run `database-mssql/17_views_procedures.sql` after the tables exist.
 3. Install dependencies:
 
 ```powershell

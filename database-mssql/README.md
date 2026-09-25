@@ -17,6 +17,10 @@ Open SSMS, connect to the local SQL Server instance, and execute:
 9. `09_next_checkpoint_demo.sql` - complete read-only SSMS checkpoint demonstration in one file
 10. `10_inner_left_join.sql` - assigned joins, COUNT, GROUP BY, HAVING, and subquery demonstration
 
+For the application's UNION, VIEW & PROCEDURE page, run `17_views_procedures.sql`
+after the tables have been created. `15_union_queries.sql` contains standalone
+UNION and UNION ALL queries for SSMS.
+
 The first three scripts are safe to run again: they check whether the database, tables, and sample rows already exist.
 
 For the next checkpoint, create Sender, Receiver, and Parcel records from the frontend,

@@ -8,6 +8,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const customReportRoutes = require('./routes/customReportRoutes');
 const innerLeftReportRoutes = require('./routes/innerLeftReportRoutes');
 const aggregateReportRoutes = require('./routes/aggregateReportRoutes');
+const sqlConceptRoutes = require('./routes/sqlConceptRoutes');
 
 const app = express();
 
@@ -202,6 +203,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/custom-reports', customReportRoutes);
 app.use('/api/aggregate-reports', aggregateReportRoutes);
 app.use('/api/sql-queries', innerLeftReportRoutes);
+app.use('/api/sql-concepts', sqlConceptRoutes);
 
 
 // ==========================================

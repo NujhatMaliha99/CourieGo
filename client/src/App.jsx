@@ -7,6 +7,7 @@ import CustomQueryReports from "./pages/CustomQueryReports";
 import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
 import AggregateReports from './pages/AggregateReports';
 import Chatbot from "./pages/Chatbot";
+import SqlConceptsPage from './pages/SqlConceptsPage';
 const emptyForm = {
   sender_id: 1,
   receiver_id: 1,
@@ -267,6 +268,11 @@ function ParcelPage() {
     Aggregate Reports
   </button>
 </Link>
+        <div style={{ marginTop: '12px' }}>
+          <Link to="/sql-concepts">
+            <button type="button">UNION, VIEW &amp; PROCEDURE</button>
+          </Link>
+        </div>
       </header>
       <form onSubmit={createParcel}>
         <select
@@ -589,6 +595,7 @@ function ParcelPage() {
                 name="status"
                 value={editForm.status}
                 onChange={editChange}
+                disabled={editingParcel?.status === 'delivered'}
               >
                 <option value="pending">Pending</option>
                 <option value="picked_up">Picked up</option>
@@ -597,6 +604,9 @@ function ParcelPage() {
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
               </select>
+              {editingParcel?.status === 'delivered' && (
+                <p className="message">Delivered parcel status cannot be changed.</p>
+              )}
               {editMessage && <p className="message">{editMessage}</p>}
               <button disabled={editSaving}>
                 {editSaving ? 'Updating...' : 'Update Parcel'}
@@ -804,6 +814,7 @@ export default function App() {
         <Route path="/sql-queries" element={<InnerLeftSqlReports />} />
         <Route path="/aggregate-reports" element={<AggregateReports />} />
         <Route path="/chatbot" element={<Chatbot />} />
+        <Route path="/sql-concepts" element={<SqlConceptsPage />} />
       </Routes>
 
       <FloatingChat />

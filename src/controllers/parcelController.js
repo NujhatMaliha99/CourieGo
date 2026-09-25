@@ -101,9 +101,16 @@ async function updateParcel(req, res, next) {
             updated_at = SYSDATETIME()
         OUTPUT INSERTED.*
         WHERE parcel_id = @parcel_id
+          AND NOT (status = 'delivered' AND @status <> 'delivered')
       `);
 
     if (!result.recordset.length) {
+      const current = await pool.request()
+        .input('parcel_id', sql.Int, id)
+        .query('SELECT status FROM dbo.parcels WHERE parcel_id = @parcel_id');
+      if (current.recordset[0]?.status === 'delivered' && status !== 'delivered') {
+        return res.status(400).json({ message: 'A delivered parcel cannot change status.' });
+      }
       return res.status(404).json({ message: 'Parcel not found.' });
     }
 

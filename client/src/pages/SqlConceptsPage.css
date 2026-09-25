@@ -1,0 +1,17 @@
+.sc-page{max-width:1050px;margin:34px auto 80px;color:#173b42}
+.sc-back{color:#087d8d;text-decoration:none;font-weight:700}
+.sc-back:hover{text-decoration:underline}
+.sc-header{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:20px 0 26px}
+.sc-header h1{font-size:32px;margin:0}
+.sc-card{margin-top:20px;padding:26px;border-radius:16px;box-shadow:0 12px 30px #087d8d0c}
+.sc-card h2{font-size:21px;margin:10px 0 6px}
+.sc-card p{line-height:1.5}
+.sc-tag{display:inline-block;color:#087d8d;background:#dff6f5;border-radius:999px;padding:6px 11px;font-weight:700;font-size:12px;letter-spacing:.03em}
+.sc-table-wrap{overflow-x:auto}
+.sc-table-wrap table{width:100%}
+.sc-count{font-size:12px;margin-bottom:0}
+.sc-form{display:flex;flex-wrap:wrap;align-items:end;gap:12px;margin:18px 0}
+.sc-form label{display:grid;gap:7px;font-weight:700}
+.sc-form input,.sc-form select{min-width:220px;max-width:100%}
+.sc-error{padding:10px;color:#a61e2b;background:#ffe9ec;border-radius:8px}
+@media(max-width:650px){.sc-header{display:block}.sc-header button{margin-top:12px}.sc-card{padding:19px}}

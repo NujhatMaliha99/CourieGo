@@ -3,17 +3,15 @@ DROP VIEW IF EXISTS dbo.vw_parcel_summary;
 DROP PROCEDURE IF EXISTS dbo.usp_GetParcelsByStatus;
 DROP PROCEDURE IF EXISTS dbo.usp_PerformTransactionDemo;
 DROP TRIGGER IF EXISTS trg_parcel_insert_audit;
--- Note: parcel_audit_log table is kept so logs aren't lost. 
--- Uncomment below if you want to drop the table too:
--- DROP TABLE IF EXISTS dbo.parcel_audit_log;
+
 
 GO
 
 -- 01. VIEW: Create a view for parcel summary combining parcels and senders
 CREATE VIEW dbo.vw_parcel_summary AS
-SELECT p.parcel_id, p.tracking_id, p.parcel_type, p.status, s.full_name AS sender_name
-FROM dbo.parcels AS p
-INNER JOIN dbo.users AS s ON p.sender_id = s.user_id;
+SELECT dbo.parcels.parcel_id, dbo.parcels.tracking_id, dbo.parcels.parcel_type, dbo.parcels.status, dbo.users.full_name AS sender_name
+FROM dbo.parcels
+INNER JOIN dbo.users ON dbo.parcels.sender_id = dbo.users.user_id;
 
 GO
 
@@ -83,21 +81,7 @@ END;
 
 GO
 
--- 06. SET-BASED QUERY (UNION): Combine unique users and receivers into a single list
-SELECT user_id AS id, full_name FROM dbo.users
-UNION
-SELECT receiver_id AS id, full_name FROM dbo.receivers;
-
-GO
-
--- 07. SET-BASED QUERY (INTERSECT): Find users who have sent parcels
-SELECT user_id AS id FROM dbo.users
-INTERSECT
-SELECT sender_id AS id FROM dbo.parcels;
-
-GO
-
--- 08. SET-BASED QUERY (EXCEPT): Find users who have not sent any parcels
+-- 06. SET-BASED QUERY (EXCEPT): Find users who have not sent any parcels
 SELECT user_id AS id FROM dbo.users
 EXCEPT
 SELECT sender_id AS id FROM dbo.parcels;

@@ -268,23 +268,12 @@ function ParcelPage() {
     Aggregate Reports
   </button>
 </Link>
-        <div style={{ marginTop: '12px' }}>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
           <Link to="/sql-concepts">
             <button type="button">UNION, VIEW &amp; PROCEDURE</button>
           </Link>
-        </div>
-        <div style={{ marginTop: '12px' }}>
           <Link to="/sql-advanced">
-            <button type="button" style={{
-              backgroundColor: '#4db6ac',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '8px 14px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}>Advanced SQL (Trigger & Transaction)</button>
+            <button type="button">Advanced SQL</button>
           </Link>
         </div>
 

@@ -3,17 +3,13 @@ const { sql, poolPromise } = require('../../config/database');
 async function getAllExtraFeatures(req, res, next) {
   try {
     const pool = await poolPromise;
-    const [viewRes, unionRes, intersectRes, exceptRes] = await Promise.all([
+    const [viewRes, exceptRes] = await Promise.all([
       pool.request().query('SELECT * FROM dbo.vw_parcel_summary'),
-      pool.request().query('SELECT user_id AS id, full_name FROM dbo.users UNION SELECT receiver_id AS id, full_name FROM dbo.receivers'),
-      pool.request().query('SELECT user_id AS id FROM dbo.users INTERSECT SELECT sender_id AS id FROM dbo.parcels'),
       pool.request().query('SELECT user_id AS id FROM dbo.users EXCEPT SELECT sender_id AS id FROM dbo.parcels')
     ]);
 
     return res.status(200).json({
       view_data: viewRes.recordset,
-      union_data: unionRes.recordset,
-      intersect_data: intersectRes.recordset,
       except_data: exceptRes.recordset
     });
   } catch (error) {
@@ -34,27 +30,6 @@ async function getParcelsByStatus(req, res, next) {
       .execute('dbo.usp_GetParcelsByStatus');
 
     return res.status(200).json({ status, data: result.recordset });
-  } catch (error) {
-    next(error);
-  }
-}
-
-async function getAuditLogs(req, res, next) {
-  try {
-    const requestedLimit = Number.parseInt(req.query.limit, 10);
-    const limit = Number.isInteger(requestedLimit)
-      ? Math.min(Math.max(requestedLimit, 1), 100)
-      : 50;
-    const pool = await poolPromise;
-    const result = await pool.request()
-      .input('limit', sql.Int, limit)
-      .query(`
-        SELECT TOP (@limit) log_id, parcel_id, action_message, action_time
-        FROM dbo.parcel_audit_log
-        ORDER BY action_time DESC, log_id DESC
-      `);
-
-    return res.status(200).json({ data: result.recordset });
   } catch (error) {
     next(error);
   }
@@ -106,6 +81,5 @@ async function runProcedureAndTransaction(req, res, next) {
 module.exports = {
   getAllExtraFeatures,
   getParcelsByStatus,
-  getAuditLogs,
   runProcedureAndTransaction,
 };

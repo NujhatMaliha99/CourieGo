@@ -26,10 +26,9 @@ function ResultTable({ columns, rows, emptyText }) {
 }
 
 export default function ExtraFeaturesPage() {
-  const [data, setData] = useState({ view_data: [], union_data: [], intersect_data: [], except_data: [] });
+  const [data, setData] = useState({ view_data: [], except_data: [] });
   const [statusRows, setStatusRows] = useState([]);
   const [status, setStatus] = useState('pending');
-  const [auditLogs, setAuditLogs] = useState([]);
   const [transactionForm, setTransactionForm] = useState({
     sender_id: '1', receiver_id: '1', tracking_id: '', parcel_type: 'Documents',
     weight: '', charge: '', status: 'pending',
@@ -52,22 +51,13 @@ export default function ExtraFeaturesPage() {
 
       setData({
         view_data: Array.isArray(result.view_data) ? result.view_data : [],
-        union_data: Array.isArray(result.union_data) ? result.union_data : [],
-        intersect_data: Array.isArray(result.intersect_data) ? result.intersect_data : [],
         except_data: Array.isArray(result.except_data) ? result.except_data : [],
       });
 
-      const [statusResponse, auditResponse] = await Promise.all([
-        fetch(`/api/extra-features/parcels-by-status?status=${encodeURIComponent(status)}`),
-        fetch('/api/extra-features/audit-logs'),
-      ]);
-      const [statusResult, auditResult] = await Promise.all([
-        statusResponse.json(), auditResponse.json(),
-      ]);
+      const statusResponse = await fetch(`/api/extra-features/parcels-by-status?status=${encodeURIComponent(status)}`);
+      const statusResult = await statusResponse.json();
       if (!statusResponse.ok) throw new Error(statusResult.message || 'Could not load status results.');
-      if (!auditResponse.ok) throw new Error(auditResult.message || 'Could not load audit logs.');
       setStatusRows(Array.isArray(statusResult.data) ? statusResult.data : []);
-      setAuditLogs(Array.isArray(auditResult.data) ? auditResult.data : []);
     } catch (err) {
       console.error('Failed to load advanced SQL features:', err);
       setError(err.message || 'Could not load advanced SQL features.');
@@ -136,27 +126,7 @@ export default function ExtraFeaturesPage() {
       </section>
 
       <section className="ef-card">
-        <span className="ef-tag">02 &middot; UNION</span>
-        <h2>Unique sender and receiver rows</h2>
-        <p>Repeated IDs and names are combined into one result set.</p>
-        <ResultTable
-          columns={[['id', 'ID'], ['full_name', 'Name']]}
-          rows={data.union_data}
-          emptyText="No union rows found."
-        />
-        <p className="ef-count">{data.union_data.length} rows</p>
-      </section>
-
-      <section className="ef-card">
-        <span className="ef-tag">03 &middot; INTERSECT</span>
-        <h2>Users who have sent parcels</h2>
-        <p>IDs present in both the users and parcels tables.</p>
-        <ResultTable columns={[['id', 'User ID']]} rows={data.intersect_data} emptyText="No intersect rows found." />
-        <p className="ef-count">{data.intersect_data.length} rows</p>
-      </section>
-
-      <section className="ef-card">
-        <span className="ef-tag">04 &middot; EXCEPT</span>
+        <span className="ef-tag">02 &middot; EXCEPT</span>
         <h2>Users who have not sent parcels</h2>
         <p>Users present in the users table but absent from parcels.</p>
         <ResultTable columns={[['id', 'User ID']]} rows={data.except_data} emptyText="No except rows found." />
@@ -164,7 +134,7 @@ export default function ExtraFeaturesPage() {
       </section>
 
       <section className="ef-card">
-        <span className="ef-tag">05 &middot; STORED PROCEDURE</span>
+        <span className="ef-tag">03 &middot; STORED PROCEDURE</span>
         <h2>Parcels by status</h2>
         <p>Results from <code>dbo.usp_GetParcelsByStatus</code>.</p>
         <label className="ef-control">
@@ -186,7 +156,7 @@ export default function ExtraFeaturesPage() {
       </section>
 
       <section className="ef-card">
-        <span className="ef-tag">06 &middot; TRANSACTION + TRIGGER</span>
+        <span className="ef-tag">04 &middot; TRANSACTION + TRIGGER</span>
         <h2>Run transaction demo</h2>
         <p>Executes <code>dbo.usp_PerformTransactionDemo</code>; the insert trigger writes the audit log.</p>
         <form className="ef-form" onSubmit={runTransaction}>
@@ -227,15 +197,6 @@ export default function ExtraFeaturesPage() {
         )}
       </section>
 
-      <section className="ef-card">
-        <span className="ef-tag">07 &middot; TRIGGER AUDIT LOG</span>
-        <h2>Parcel insert audit logs</h2>
-        <p>Rows written by <code>trg_parcel_insert_audit</code> in <code>dbo.parcel_audit_log</code>.</p>
-        <ResultTable columns={[
-          ['log_id', 'Log ID'], ['parcel_id', 'Parcel ID'], ['action_message', 'Action'], ['action_time', 'Time'],
-        ]} rows={auditLogs} emptyText="No audit logs found." />
-        <p className="ef-count">{auditLogs.length} rows</p>
-      </section>
     </main>
   );
 }

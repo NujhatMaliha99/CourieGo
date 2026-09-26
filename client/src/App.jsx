@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ReceiverManagement from './pages/ReceiverManagement';
 import SenderManagement from './pages/SenderManagement';
+import DeliveryAgentManagement from './pages/DeliveryAgent';
 import ReportPage from "./pages/ReportPage";
 import CustomQueryReports from "./pages/CustomQueryReports";
 import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
@@ -29,6 +30,13 @@ function ParcelPage() {
   const [editMessage, setEditMessage] = useState('');
   const [senders, setSenders] = useState([]);
   const [receivers, setReceivers] = useState([]);
+  // Delivery agent assignment state
+  const [agents, setAgents] = useState([]);
+  const [activeAssignments, setActiveAssignments] = useState({});
+  const [assignTarget, setAssignTarget] = useState(null);
+  const [assignAgentId, setAssignAgentId] = useState('');
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [assignMessage, setAssignMessage] = useState('');
   // Read One (Search State)
   const [searchId, setSearchId] = useState('');
   const [singleParcel, setSingleParcel] = useState(null);
@@ -73,9 +81,34 @@ function ParcelPage() {
       setMessage('Could not load sender or receiver list.');
     }
   };
+  const loadAgents = async () => {
+    try {
+      const response = await fetch('/api/delivery-agents');
+      const result = await response.json();
+      setAgents(result.data || []);
+    } catch {
+      setMessage('Could not load delivery agents.');
+    }
+  };
+
+  const loadActiveAssignments = async () => {
+    try {
+      const response = await fetch('/api/assignments?active=true');
+      const result = await response.json();
+      const rows = result.data || [];
+      const byParcel = {};
+      rows.forEach((row) => { byParcel[row.parcel_id] = row; });
+      setActiveAssignments(byParcel);
+    } catch {
+      setMessage('Could not load delivery agent assignments.');
+    }
+  };
+
   useEffect(() => {
     loadParcels();
     loadForeignKeyOptions();
+    loadAgents();
+    loadActiveAssignments();
   }, []);
   const searchParcelById = async (event) => {
     event.preventDefault();
@@ -189,6 +222,68 @@ function ParcelPage() {
       setMessage('Could not connect to the SQL Server backend.');
     }
   };
+  const openAssignModal = (parcel) => {
+    setAssignTarget(parcel);
+    setAssignAgentId('');
+    setAssignMessage('');
+  };
+
+  const closeAssignModal = () => {
+    setAssignTarget(null);
+    setAssignAgentId('');
+    setAssignMessage('');
+  };
+
+  const submitAssign = async (event) => {
+    event.preventDefault();
+    setAssignSaving(true);
+    setAssignMessage('');
+    try {
+      const response = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          parcel_id: assignTarget.parcel_id || assignTarget.id,
+          agent_id: assignAgentId,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setAssignMessage(result.message || 'Failed to assign delivery agent.');
+        return;
+      }
+      closeAssignModal();
+      setMessage('Delivery agent assigned successfully.');
+      await Promise.all([loadParcels(), loadAgents(), loadActiveAssignments()]);
+    } catch {
+      setAssignMessage('Could not connect to the SQL Server backend.');
+    } finally {
+      setAssignSaving(false);
+    }
+  };
+
+  const completeAssignment = async (assignmentId) => {
+    if (!window.confirm('Mark this assignment as completed and delivered?')) {
+      return;
+    }
+    try {
+      const response = await fetch(`/api/assignments/${assignmentId}/complete`, {
+        method: 'PUT',
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        setMessage(result.message || 'Failed to complete assignment.');
+        return;
+      }
+      setMessage('Assignment marked as completed.');
+      await Promise.all([loadParcels(), loadAgents(), loadActiveAssignments()]);
+    } catch {
+      setMessage('Could not connect to the SQL Server backend.');
+    }
+  };
+
+  const availableAgents = agents.filter((a) => a.availability_status === 'available');
+
   const filteredParcels = parcels.filter(
     (p) => statusFilter === 'all' || p.status === statusFilter
   );
@@ -220,6 +315,18 @@ function ParcelPage() {
             fontSize: '14px',
             fontWeight: '500'
           }}>Sender Management</button>
+        </Link>{' '}
+        <Link to="/delivery-agents">
+          <button style={{
+            backgroundColor: '#4db6ac',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>Delivery Agent Management</button>
         </Link>{' '}
         <Link to="/reports">
           <button style={{
@@ -431,45 +538,71 @@ function ParcelPage() {
                 <th>Weight</th>
                 <th>Charge</th>
                 <th>Status</th>
+                <th>Delivery Agent</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredParcels.map((parcel, index) => (
-                <tr key={parcel.parcel_id || parcel.id || index}>
-                  <td>{parcel.parcel_id || parcel.id}</td>
-                  <td>{parcel.tracking_id}</td>
-                  <td>{parcel.parcel_type}</td>
-                  <td>{parcel.weight} kg</td>
-                  <td>BDT {parcel.charge}</td>
-                  <td>{parcel.status?.replaceAll('_', ' ')}</td>
-                  <td className="actions">
-                    <button
-                      type="button"
-                      className="view"
-                      onClick={() => setSelectedParcel(parcel)}
-                    >
-                      View
-                    </button>
-                    <button
-                      type="button"
-                      className="edit"
-                      onClick={() => startEdit(parcel)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="delete"
-                      onClick={() =>
-                        deleteParcel(parcel.parcel_id || parcel.id)
-                      }
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {filteredParcels.map((parcel, index) => {
+                const parcelId = parcel.parcel_id || parcel.id;
+                const assignment = activeAssignments[parcelId];
+                const canAssign =
+                  !assignment &&
+                  parcel.status !== 'delivered' &&
+                  parcel.status !== 'cancelled';
+                return (
+                  <tr key={parcelId || index}>
+                    <td>{parcelId}</td>
+                    <td>{parcel.tracking_id}</td>
+                    <td>{parcel.parcel_type}</td>
+                    <td>{parcel.weight} kg</td>
+                    <td>BDT {parcel.charge}</td>
+                    <td>{parcel.status?.replaceAll('_', ' ')}</td>
+                    <td>
+                      {assignment ? assignment.agent_name : '-'}
+                    </td>
+                    <td className="actions">
+                      <button
+                        type="button"
+                        className="view"
+                        onClick={() => setSelectedParcel(parcel)}
+                      >
+                        View
+                      </button>
+                      <button
+                        type="button"
+                        className="edit"
+                        onClick={() => startEdit(parcel)}
+                      >
+                        Edit
+                      </button>
+                      {canAssign && (
+                        <button
+                          type="button"
+                          onClick={() => openAssignModal(parcel)}
+                        >
+                          Assign Agent
+                        </button>
+                      )}
+                      {assignment && (
+                        <button
+                          type="button"
+                          onClick={() => completeAssignment(assignment.assignment_id)}
+                        >
+                          Mark Completed
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="delete"
+                        onClick={() => deleteParcel(parcelId)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -610,6 +743,45 @@ function ParcelPage() {
               {editMessage && <p className="message">{editMessage}</p>}
               <button disabled={editSaving}>
                 {editSaving ? 'Updating...' : 'Update Parcel'}
+              </button>
+            </form>
+          </article>
+        </div>
+      )}
+      {/* Assign Delivery Agent Modal */}
+      {assignTarget && (
+        <div className="overlay" onClick={closeAssignModal}>
+          <article className="details" onClick={(e) => e.stopPropagation()}>
+            <div className="details-head">
+              <h2>Assign Delivery Agent</h2>
+              <button type="button" onClick={closeAssignModal}>
+                X
+              </button>
+            </div>
+            <p>
+              <strong>Parcel:</strong> {assignTarget.tracking_id} (ID:{' '}
+              {assignTarget.parcel_id || assignTarget.id})
+            </p>
+            <form onSubmit={submitAssign}>
+              <select
+                value={assignAgentId}
+                onChange={(e) => setAssignAgentId(e.target.value)}
+                required
+              >
+                <option value="">Select Available Agent</option>
+                {availableAgents.map((agent) => (
+                  <option key={agent.agent_id} value={agent.agent_id}>
+                    {agent.agent_id} - {agent.full_name}
+                    {agent.vehicle_number ? ` (${agent.vehicle_number})` : ''}
+                  </option>
+                ))}
+              </select>
+              {!availableAgents.length && (
+                <p className="message">No delivery agents are currently available.</p>
+              )}
+              {assignMessage && <p className="message">{assignMessage}</p>}
+              <button disabled={assignSaving || !availableAgents.length}>
+                {assignSaving ? 'Assigning...' : 'Assign Agent'}
               </button>
             </form>
           </article>
@@ -809,6 +981,7 @@ export default function App() {
         <Route path="/" element={<ParcelPage />} />
         <Route path="/receivers" element={<ReceiverManagement />} />
         <Route path="/senders" element={<SenderManagement />} />
+        <Route path="/delivery-agents" element={<DeliveryAgentManagement />} />
         <Route path="/reports" element={<ReportPage />} />
         <Route path="/custom-reports" element={<CustomQueryReports />} />
         <Route path="/sql-queries" element={<InnerLeftSqlReports />} />

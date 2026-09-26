@@ -5,6 +5,8 @@ const { poolPromise } = require('./config/database');
 
 const PORT = Number(process.env.PORT) || 5000;
 
+app.use('/api/assignments', require('./routes/Assignmentroutes.js'));
+
 async function startServer() {
   try {
     await poolPromise;

@@ -9,6 +9,7 @@ const customReportRoutes = require('./routes/customReportRoutes');
 const innerLeftReportRoutes = require('./routes/innerLeftReportRoutes');
 const aggregateReportRoutes = require('./routes/aggregateReportRoutes');
 const sqlConceptRoutes = require('./routes/sqlConceptRoutes');
+const deliveryAgentRoutes = require('./routes/DeliveryAgentRoutes');
 
 const app = express();
 
@@ -193,6 +194,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/parcels', parcelRoutes);
 app.use('/api/receivers', receiverRoutes);
 app.use('/api/senders', senderRoutes);
+app.use('/api/delivery-agents', deliveryAgentRoutes);
 
 
 // ==========================================

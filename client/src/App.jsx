@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import ReceiverManagement from './pages/ReceiverManagement';
 import SenderManagement from './pages/SenderManagement';
+import DeliveryAgentManagement from './pages/DeliveryAgentManagement';
 import ReportPage from "./pages/ReportPage";
 import CustomQueryReports from "./pages/CustomQueryReports";
 import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
@@ -220,6 +221,18 @@ function ParcelPage() {
             fontSize: '14px',
             fontWeight: '500'
           }}>Sender Management</button>
+        </Link>{' '}
+        <Link to="/delivery-agents">
+          <button style={{
+            backgroundColor: '#4db6ac',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '8px 14px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500'
+          }}>Delivery Agent Management</button>
         </Link>{' '}
         <Link to="/reports">
           <button style={{
@@ -809,6 +822,7 @@ export default function App() {
         <Route path="/" element={<ParcelPage />} />
         <Route path="/receivers" element={<ReceiverManagement />} />
         <Route path="/senders" element={<SenderManagement />} />
+        <Route path="/delivery-agents" element={<DeliveryAgentManagement />} />
         <Route path="/reports" element={<ReportPage />} />
         <Route path="/custom-reports" element={<CustomQueryReports />} />
         <Route path="/sql-queries" element={<InnerLeftSqlReports />} />

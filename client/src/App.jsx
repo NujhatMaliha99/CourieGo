@@ -9,6 +9,7 @@ import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
 import AggregateReports from './pages/AggregateReports';
 import Chatbot from "./pages/Chatbot";
 import SqlConceptsPage from './pages/SqlConceptsPage';
+import ExtraFeaturesPage from './pages/ExtraFeaturesPage';
 const emptyForm = {
   sender_id: 1,
   receiver_id: 1,
@@ -194,98 +195,23 @@ function ParcelPage() {
     (p) => statusFilter === 'all' || p.status === statusFilter
   );
   return (
-    <main>
-      <header>
-        <h1>CourieGo - Create Parcel</h1>
-        <p>Add a new parcel to the courier database.</p>
-        <Link to="/receivers">
-          <button style={{
-            backgroundColor: '#4db6ac',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 14px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>Receiver Management</button>
-        </Link>{' '}
-        <Link to="/senders">
-          <button style={{
-            backgroundColor: '#4db6ac',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 14px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>Sender Management</button>
-        </Link>{' '}
-        <Link to="/delivery-agents">
-          <button style={{
-            backgroundColor: '#4db6ac',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 14px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>Delivery Agent Management</button>
-        </Link>{' '}
-        <Link to="/reports">
-          <button style={{
-            backgroundColor: '#4db6ac',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 14px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>Sender-ReceiverReports</button>
-        </Link>{' '}
-        <Link to="/custom-reports">
-          <button style={{
-            backgroundColor: '#4db6ac',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '4px',
-            padding: '8px 14px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>
-            Custom Reports
-          </button>
-        </Link>
-        {' '}
-        <Link to="/sql-queries">
-          <button>SQL Query</button>
-        </Link>
-       {' '}
-<Link to="/aggregate-reports">
-  <button
-    style={{
-      backgroundColor: '#4db6ac',
-      color: '#fff',
-      border: 'none',
-      borderRadius: '4px',
-      padding: '8px 14px',
-      cursor: 'pointer',
-      fontSize: '14px',
-      fontWeight: '500'
-    }}
-  >
-    Aggregate Reports
-  </button>
-</Link>
-        <div style={{ marginTop: '12px' }}>
-          <Link to="/sql-concepts">
-            <button type="button">UNION, VIEW &amp; PROCEDURE</button>
-          </Link>
+    <main className="parcel-page">
+      <header className="parcel-header">
+        <div className="parcel-brand">
+          <h1>CourieGo - Create Parcel</h1>
+          <p>Add a new parcel to the courier database.</p>
         </div>
+        <nav className="parcel-nav" aria-label="Management and reports">
+          <Link to="/receivers"><button type="button">Receiver Management</button></Link>
+          <Link to="/senders"><button type="button">Sender Management</button></Link>
+          <Link to="/delivery-agents"><button type="button">Delivery Agent Management</button></Link>
+          <Link to="/reports"><button type="button">Sender-Receiver Reports</button></Link>
+          <Link to="/custom-reports"><button type="button">Custom Reports</button></Link>
+          <Link to="/sql-queries"><button type="button">SQL Query</button></Link>
+          <Link to="/aggregate-reports"><button type="button">Aggregate Reports</button></Link>
+          <Link to="/sql-concepts"><button type="button">UNION, VIEW &amp; PROCEDURE</button></Link>
+          <Link to="/extra-features"><button type="button">Advance Query</button></Link>
+        </nav>
       </header>
       <form onSubmit={createParcel}>
         <select
@@ -829,6 +755,7 @@ export default function App() {
         <Route path="/aggregate-reports" element={<AggregateReports />} />
         <Route path="/chatbot" element={<Chatbot />} />
         <Route path="/sql-concepts" element={<SqlConceptsPage />} />
+        <Route path="/extra-features" element={<ExtraFeaturesPage />} />
       </Routes>
 
       <FloatingChat />

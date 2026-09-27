@@ -4,22 +4,22 @@
   background: #f5fbfc;
 }
 
-header {
+.receiver-page > header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
 }
 
-h1 {
+.receiver-page h1 {
   color: #087f91;
 }
 
-header p {
+.receiver-page > header p {
   color: #607d8b;
 }
 
-button {
+.receiver-page button {
   padding: 9px 14px;
   border: 1px solid #55bdca;
   border-radius: 6px;
@@ -29,19 +29,19 @@ button {
   margin-right: 6px;
 }
 
-header button {
+.receiver-page > header button {
   background: #55bdca;
   color: white;
 }
 
-.card {
+.receiver-page .card {
   background: white;
   padding: 20px;
   border: 1px solid #d5e9ed;
   border-radius: 10px;
 }
 
-.card > input {
+.receiver-page .card > input {
   width: 350px;
   padding: 12px;
   margin-bottom: 20px;
@@ -49,35 +49,35 @@ header button {
   border-radius: 6px;
 }
 
-table {
+.receiver-page table {
   width: 100%;
   border-collapse: collapse;
 }
 
-th {
+.receiver-page th {
   background: #eaf6f8;
   color: #087f91;
   text-align: left;
 }
 
-th,
-td {
+.receiver-page th,
+.receiver-page td {
   padding: 14px;
   border-bottom: 1px solid #e5eef0;
 }
 
-.delete {
+.receiver-page .delete {
   color: red;
   border-color: #ff7777;
 }
 
-.count,
-.empty {
+.receiver-page .count,
+.receiver-page .empty {
   color: #78909c;
   margin-top: 20px;
 }
 
-.overlay {
+.receiver-page .overlay {
   position: fixed;
   inset: 0;
   background: #0005;
@@ -86,14 +86,14 @@ td {
   justify-content: center;
 }
 
-.modal {
+.receiver-page .modal {
   background: white;
   padding: 25px;
   width: 350px;
   border-radius: 8px;
 }
 
-.modal input {
+.receiver-page .modal input {
   width: 100%;
   box-sizing: border-box;
   padding: 11px;
@@ -102,7 +102,8 @@ td {
   border-radius: 6px;
 }
 
-.receiver-message {
+.receiver-page .receiver-message {
   color: #087f91;
   font-weight: 600;
 }
+

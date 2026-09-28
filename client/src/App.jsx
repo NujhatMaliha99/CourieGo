@@ -12,7 +12,6 @@ import Chatbot from './pages/Chatbot';
 import SqlConceptsPage from './pages/SqlConceptsPage';
 import ExtraFeaturesPage from './pages/ExtraFeaturesPage';
 import AuditLog from './pages/AuditLog';
-import IntersectionTransaction from './IntersectionTransaction';
 
 const emptyForm = {
   sender_id: 1,
@@ -431,19 +430,6 @@ function ParcelPage() {
                 ↗
               </span>
             </Link>
-
-            {/* ONLY ONE INTERSECTION & TRANSACTION BUTTON */}
-            <Link
-              to="/intersection-transaction"
-              className="parcel-nav-link parcel-nav-link-secondary"
-            >
-              Intersection &amp; Transaction
-
-              <span aria-hidden="true">
-                ↗
-              </span>
-            </Link>
-
           </div>
 
         </nav>
@@ -1330,68 +1316,6 @@ export default function App() {
         <Route path="/sql-concepts" element={<SqlConceptsPage />} />
         <Route path="/extra-features" element={<ExtraFeaturesPage />} />
         <Route path="/audit-log" element={<AuditLog />} />
-
-        <Route
-          path="/"
-          element={<ParcelPage />}
-        />
-
-        <Route
-          path="/receivers"
-          element={<ReceiverManagement />}
-        />
-
-        <Route
-          path="/senders"
-          element={<SenderManagement />}
-        />
-
-        <Route
-          path="/delivery-agents"
-          element={<DeliveryAgentManagement />}
-        />
-
-        <Route
-          path="/reports"
-          element={<ReportPage />}
-        />
-
-        <Route
-          path="/custom-reports"
-          element={<CustomQueryReports />}
-        />
-
-        <Route
-          path="/sql-queries"
-          element={<InnerLeftSqlReports />}
-        />
-
-        <Route
-          path="/aggregate-reports"
-          element={<AggregateReports />}
-        />
-
-        <Route
-          path="/chatbot"
-          element={<Chatbot />}
-        />
-
-        <Route
-          path="/sql-concepts"
-          element={<SqlConceptsPage />}
-        />
-
-        <Route
-          path="/extra-features"
-          element={<ExtraFeaturesPage />}
-        />
-
-        {/* INTERSECTION & TRANSACTION PAGE */}
-        <Route
-          path="/intersection-transaction"
-          element={<IntersectionTransaction />}
-        />
-
       </Routes>
 
       <FloatingChat />

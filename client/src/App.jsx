@@ -13,6 +13,7 @@ import SqlConceptsPage from './pages/SqlConceptsPage';
 import ExtraFeaturesPage from './pages/ExtraFeaturesPage';
 import AuditLog from './pages/AuditLog';
 import IntersectionTransaction from './IntersectionTransaction';
+import ExceptQueriesPage from './pages/ExceptQueriesPage';
 
 const emptyForm = {
   sender_id: 1,
@@ -438,6 +439,17 @@ function ParcelPage() {
               className="parcel-nav-link parcel-nav-link-secondary"
             >
               Intersection &amp; Transaction
+
+              <span aria-hidden="true">
+                ↗
+              </span>
+            </Link>
+
+            <Link
+              to="/except-queries"
+              className="parcel-nav-link parcel-nav-link-secondary"
+            >
+              Except Queries
 
               <span aria-hidden="true">
                 ↗
@@ -1390,6 +1402,12 @@ export default function App() {
         <Route
           path="/intersection-transaction"
           element={<IntersectionTransaction />}
+        />
+
+        {/* EXCEPT QUERIES PAGE */}
+        <Route
+          path="/except-queries"
+          element={<ExceptQueriesPage />}
         />
 
       </Routes>

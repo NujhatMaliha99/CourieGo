@@ -30,12 +30,17 @@ async function createSender(req, res, next) {
       .input('phone', sql.VarChar(20), phone?.trim() || null)
       .input('address', sql.VarChar(255), address?.trim() || null)
       .query(`
+        DECLARE @Inserted TABLE (
+          user_id INT, full_name VARCHAR(100), email VARCHAR(120), phone VARCHAR(20), address VARCHAR(255)
+        );
         INSERT INTO dbo.users (role_id, full_name, email, phone, address)
         OUTPUT INSERTED.user_id, INSERTED.full_name, INSERTED.email,
                INSERTED.phone, INSERTED.address
+        INTO @Inserted
         SELECT role_id, @full_name, @email, @phone, @address
         FROM dbo.roles
-        WHERE role_name = 'customer'
+        WHERE role_name = 'customer';
+        SELECT * FROM @Inserted;
       `);
 
     if (!result.recordset.length) {
@@ -88,13 +93,18 @@ async function updateSender(req, res, next) {
       .input('phone', sql.VarChar(20), phone?.trim() || null)
       .input('address', sql.VarChar(255), address?.trim() || null)
       .query(`
+        DECLARE @Updated TABLE (
+          user_id INT, full_name VARCHAR(100), email VARCHAR(120), phone VARCHAR(20), address VARCHAR(255)
+        );
         UPDATE u
         SET full_name = @full_name, email = @email, phone = @phone, address = @address
         OUTPUT INSERTED.user_id, INSERTED.full_name, INSERTED.email,
                INSERTED.phone, INSERTED.address
+        INTO @Updated
         FROM dbo.users AS u
         INNER JOIN dbo.roles AS r ON u.role_id = r.role_id
-        WHERE u.user_id = @user_id AND r.role_name = 'customer'
+        WHERE u.user_id = @user_id AND r.role_name = 'customer';
+        SELECT * FROM @Updated;
       `);
     if (!result.recordset.length) return res.status(404).json({ message: 'Sender not found.' });
     return res.status(200).json({ message: 'Sender updated successfully.', data: result.recordset[0] });
@@ -118,13 +128,18 @@ async function deleteSender(req, res, next) {
     const result = await pool.request()
       .input('user_id', sql.Int, id)
       .query(`
+        DECLARE @Deleted TABLE (
+          user_id INT, full_name VARCHAR(100), email VARCHAR(120), phone VARCHAR(20), address VARCHAR(255)
+        );
         DELETE u
         OUTPUT DELETED.user_id, DELETED.full_name, DELETED.email,
                DELETED.phone, DELETED.address
+        INTO @Deleted
         FROM dbo.users AS u
         INNER JOIN dbo.roles AS r ON u.role_id = r.role_id
         WHERE u.user_id = @user_id
-          AND r.role_name = 'customer'
+          AND r.role_name = 'customer';
+        SELECT * FROM @Deleted;
       `);
 
     if (!result.recordset.length) {

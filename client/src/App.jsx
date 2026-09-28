@@ -11,6 +11,7 @@ import AggregateReports from './pages/AggregateReports';
 import Chatbot from './pages/Chatbot';
 import SqlConceptsPage from './pages/SqlConceptsPage';
 import ExtraFeaturesPage from './pages/ExtraFeaturesPage';
+import AuditLog from './pages/AuditLog';
 import IntersectionTransaction from './IntersectionTransaction';
 
 const emptyForm = {
@@ -27,6 +28,7 @@ const managementLinks = [
   { to: '/receivers', label: 'Receiver Management' },
   { to: '/senders', label: 'Sender Management' },
   { to: '/delivery-agents', label: 'Delivery Agent Management' },
+  
 ];
 
 const reportLinks = [
@@ -34,6 +36,7 @@ const reportLinks = [
   { to: '/custom-reports', label: 'Custom Reports' },
   { to: '/sql-queries', label: 'SQL Query' },
   { to: '/aggregate-reports', label: 'Aggregate Reports' },
+  { to: '/audit-log', label: 'Activity Log' },
 ];
 
 function ParcelPage() {
@@ -1315,6 +1318,18 @@ export default function App() {
     <BrowserRouter>
 
       <Routes>
+        <Route path="/" element={<ParcelPage />} />
+        <Route path="/receivers" element={<ReceiverManagement />} />
+        <Route path="/senders" element={<SenderManagement />} />
+        <Route path="/delivery-agents" element={<DeliveryAgentManagement />} />
+        <Route path="/reports" element={<ReportPage />} />
+        <Route path="/custom-reports" element={<CustomQueryReports />} />
+        <Route path="/sql-queries" element={<InnerLeftSqlReports />} />
+        <Route path="/aggregate-reports" element={<AggregateReports />} />
+        <Route path="/chatbot" element={<Chatbot />} />
+        <Route path="/sql-concepts" element={<SqlConceptsPage />} />
+        <Route path="/extra-features" element={<ExtraFeaturesPage />} />
+        <Route path="/audit-log" element={<AuditLog />} />
 
         <Route
           path="/"

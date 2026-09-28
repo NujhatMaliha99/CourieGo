@@ -1,7 +1,6 @@
 USE courier_management;
 GO
 
-/* Run one marked section at a time in SSMS. */
 
 -- ==================== CREATE ====================
 IF EXISTS (SELECT 1 FROM dbo.delivery_agents WHERE phone = '01911223344')

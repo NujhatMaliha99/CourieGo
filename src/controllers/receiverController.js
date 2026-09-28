@@ -51,9 +51,13 @@ async function createReceiver(req, res, next) {
       .input('email', sql.VarChar(120), email?.trim() || null)
       .input('address', sql.VarChar(255), address.trim())
       .query(`
+        DECLARE @Inserted TABLE (
+          receiver_id INT, full_name VARCHAR(100), phone VARCHAR(20), email VARCHAR(120), address VARCHAR(255)
+        );
         INSERT INTO dbo.receivers (full_name, phone, email, address)
-        OUTPUT INSERTED.*
-        VALUES (@full_name, @phone, @email, @address)
+        OUTPUT INSERTED.* INTO @Inserted
+        VALUES (@full_name, @phone, @email, @address);
+        SELECT * FROM @Inserted;
       `);
 
     return res.status(201).json({
@@ -81,13 +85,17 @@ async function updateReceiver(req, res, next) {
       .input('email', sql.VarChar(120), email?.trim() || null)
       .input('address', sql.VarChar(255), address.trim())
       .query(`
+        DECLARE @Updated TABLE (
+          receiver_id INT, full_name VARCHAR(100), phone VARCHAR(20), email VARCHAR(120), address VARCHAR(255)
+        );
         UPDATE dbo.receivers
         SET full_name = @full_name,
             phone = @phone,
             email = @email,
             address = @address
-        OUTPUT INSERTED.*
-        WHERE receiver_id = @receiver_id
+        OUTPUT INSERTED.* INTO @Updated
+        WHERE receiver_id = @receiver_id;
+        SELECT * FROM @Updated;
       `);
 
     if (!result.recordset.length) {
@@ -118,9 +126,13 @@ async function deleteReceiver(req, res, next) {
     const result = await pool.request()
       .input('receiver_id', sql.Int, id)
       .query(`
+        DECLARE @Deleted TABLE (
+          receiver_id INT, full_name VARCHAR(100), phone VARCHAR(20), email VARCHAR(120), address VARCHAR(255)
+        );
         DELETE FROM dbo.receivers
-        OUTPUT DELETED.*
-        WHERE receiver_id = @receiver_id
+        OUTPUT DELETED.* INTO @Deleted
+        WHERE receiver_id = @receiver_id;
+        SELECT * FROM @Deleted;
       `);
 
     if (!result.recordset.length) {

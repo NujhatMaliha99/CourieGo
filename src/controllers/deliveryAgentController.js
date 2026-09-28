@@ -58,11 +58,16 @@ async function createDeliveryAgent(req, res, next) {
       .input('license_number', sql.VarChar(50), license_number?.trim() || null)
       .input('availability_status', sql.VarChar(30), availability_status?.trim() || 'available')
       .query(`
+        DECLARE @Inserted TABLE (
+          agent_id INT, full_name VARCHAR(100), phone VARCHAR(20), email VARCHAR(120), address VARCHAR(255),
+          vehicle_number VARCHAR(50), license_number VARCHAR(50), availability_status VARCHAR(30), created_at DATETIME2
+        );
         INSERT INTO dbo.delivery_agents
           (full_name, phone, email, address, vehicle_number, license_number, availability_status)
-        OUTPUT INSERTED.*
+        OUTPUT INSERTED.* INTO @Inserted
         VALUES
-          (@full_name, @phone, @email, @address, @vehicle_number, @license_number, @availability_status)
+          (@full_name, @phone, @email, @address, @vehicle_number, @license_number, @availability_status);
+        SELECT * FROM @Inserted;
       `);
 
     return res.status(201).json({
@@ -97,6 +102,10 @@ async function updateDeliveryAgent(req, res, next) {
       .input('license_number', sql.VarChar(50), license_number?.trim() || null)
       .input('availability_status', sql.VarChar(30), availability_status?.trim() || 'available')
       .query(`
+        DECLARE @Updated TABLE (
+          agent_id INT, full_name VARCHAR(100), phone VARCHAR(20), email VARCHAR(120), address VARCHAR(255),
+          vehicle_number VARCHAR(50), license_number VARCHAR(50), availability_status VARCHAR(30), created_at DATETIME2
+        );
         UPDATE dbo.delivery_agents
         SET full_name = @full_name,
             phone = @phone,
@@ -105,8 +114,9 @@ async function updateDeliveryAgent(req, res, next) {
             vehicle_number = @vehicle_number,
             license_number = @license_number,
             availability_status = @availability_status
-        OUTPUT INSERTED.*
-        WHERE agent_id = @agent_id
+        OUTPUT INSERTED.* INTO @Updated
+        WHERE agent_id = @agent_id;
+        SELECT * FROM @Updated;
       `);
 
     if (!result.recordset.length) {
@@ -137,9 +147,14 @@ async function deleteDeliveryAgent(req, res, next) {
     const result = await pool.request()
       .input('agent_id', sql.Int, id)
       .query(`
+        DECLARE @Deleted TABLE (
+          agent_id INT, full_name VARCHAR(100), phone VARCHAR(20), email VARCHAR(120), address VARCHAR(255),
+          vehicle_number VARCHAR(50), license_number VARCHAR(50), availability_status VARCHAR(30), created_at DATETIME2
+        );
         DELETE FROM dbo.delivery_agents
-        OUTPUT DELETED.*
-        WHERE agent_id = @agent_id
+        OUTPUT DELETED.* INTO @Deleted
+        WHERE agent_id = @agent_id;
+        SELECT * FROM @Deleted;
       `);
 
     if (!result.recordset.length) {

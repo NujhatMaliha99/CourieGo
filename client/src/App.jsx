@@ -19,6 +19,20 @@ const emptyForm = {
   charge: '',
   status: 'pending',
 };
+
+const managementLinks = [
+  { to: '/receivers', label: 'Receiver Management' },
+  { to: '/senders', label: 'Sender Management' },
+  { to: '/delivery-agents', label: 'Delivery Agent Management' },
+];
+
+const reportLinks = [
+  { to: '/reports', label: 'Sender–Receiver Reports' },
+  { to: '/custom-reports', label: 'Custom Reports' },
+  { to: '/sql-queries', label: 'SQL Query' },
+  { to: '/aggregate-reports', label: 'Aggregate Reports' },
+];
+
 function ParcelPage() {
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState('');
@@ -197,20 +211,53 @@ function ParcelPage() {
   return (
     <main className="parcel-page">
       <header className="parcel-header">
-        <div className="parcel-brand">
-          <h1>CourieGo - Create Parcel</h1>
-          <p>Add a new parcel to the courier database.</p>
+        <div className="parcel-brand-row">
+          <div className="parcel-brand">
+            <span className="parcel-brand-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+                <path d="m12 3 9 5v8l-9 5-9-5V8l9-5Z" />
+                <path d="m3 8 9 5 9-5M12 13v8M7.5 5.5l9 5" />
+              </svg>
+            </span>
+            <span className="parcel-wordmark">Courie<span>Go</span></span>
+          </div>
+          <span className="parcel-header-badge">Parcel Management</span>
         </div>
-        <nav className="parcel-nav" aria-label="Management and reports">
-          <Link to="/receivers"><button type="button">Receiver Management</button></Link>
-          <Link to="/senders"><button type="button">Sender Management</button></Link>
-          <Link to="/delivery-agents"><button type="button">Delivery Agent Management</button></Link>
-          <Link to="/reports"><button type="button">Sender-Receiver Reports</button></Link>
-          <Link to="/custom-reports"><button type="button">Custom Reports</button></Link>
-          <Link to="/sql-queries"><button type="button">SQL Query</button></Link>
-          <Link to="/aggregate-reports"><button type="button">Aggregate Reports</button></Link>
-          <Link to="/sql-concepts"><button type="button">UNION, VIEW &amp; PROCEDURE</button></Link>
-          <Link to="/extra-features"><button type="button">Advance Query</button></Link>
+
+        <h1>Create a parcel</h1>
+        <p>Add a new parcel and manage your deliveries in one place.</p>
+
+        <nav className="parcel-navigation" aria-label="Courier management and reports">
+          <div className="parcel-nav-group">
+            <span className="parcel-nav-label">Management</span>
+            <div className="parcel-nav-grid parcel-nav-management">
+              {managementLinks.map((link) => (
+                <Link key={link.to} to={link.to} className="parcel-nav-link">
+                  {link.label}<span aria-hidden="true">↗</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="parcel-nav-group">
+            <span className="parcel-nav-label">Reports &amp; queries</span>
+            <div className="parcel-nav-grid parcel-nav-reports">
+              {reportLinks.map((link) => (
+                <Link key={link.to} to={link.to} className="parcel-nav-link parcel-nav-link-secondary">
+                  {link.label}<span aria-hidden="true">↗</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="parcel-concepts-row">
+            <Link to="/sql-concepts" className="parcel-nav-link parcel-concepts-link">
+              UNION, VIEW &amp; PROCEDURE<span aria-hidden="true">↗</span>
+            </Link>
+            <Link to="/extra-features" className="parcel-nav-link parcel-nav-link-secondary">
+              Advance Query<span aria-hidden="true">↗</span>
+            </Link>
+          </div>
         </nav>
       </header>
       <form onSubmit={createParcel}>

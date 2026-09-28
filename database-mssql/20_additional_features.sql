@@ -1,15 +1,8 @@
--- Drop existing objects first to prevent 'already exists' errors
-DROP VIEW IF EXISTS dbo.vw_parcel_summary;
-DROP VIEW IF EXISTS dbo.vw_parcel_delivery_overview;
-DROP PROCEDURE IF EXISTS dbo.usp_GetParcelsByStatus;
-DROP PROCEDURE IF EXISTS dbo.usp_PerformTransactionDemo;
-DROP TRIGGER IF EXISTS dbo.trg_parcel_insert_audit;
-
-
+USE courier_management;
 GO
 
 -- 01. VIEW: Create a view for parcel summary combining parcels and senders
-CREATE VIEW dbo.vw_parcel_summary AS
+CREATE OR ALTER VIEW dbo.vw_parcel_summary AS
 SELECT dbo.parcels.parcel_id, dbo.parcels.tracking_id, dbo.parcels.parcel_type, dbo.parcels.status, dbo.users.full_name AS sender_name
 FROM dbo.parcels
 INNER JOIN dbo.users ON dbo.parcels.sender_id = dbo.users.user_id;
@@ -17,7 +10,7 @@ INNER JOIN dbo.users ON dbo.parcels.sender_id = dbo.users.user_id;
 GO
 
 -- 02. VIEW: Combine parcel, delivery, assignment, and payment details
-CREATE VIEW dbo.vw_parcel_delivery_overview
+CREATE OR ALTER VIEW dbo.vw_parcel_delivery_overview
 AS
 WITH payment_totals AS (
     SELECT
@@ -44,7 +37,7 @@ ranked_events AS (
 ranked_assignments AS (
     SELECT
         assignment.parcel_id,
-        agent_user.full_name AS agent_name,
+        agent.full_name AS agent_name,
         agent.vehicle_number,
         assignment.completed_at,
         ROW_NUMBER() OVER (
@@ -57,8 +50,6 @@ ranked_assignments AS (
     FROM dbo.assignments AS assignment
     INNER JOIN dbo.delivery_agents AS agent
         ON agent.agent_id = assignment.agent_id
-    INNER JOIN dbo.users AS agent_user
-        ON agent_user.user_id = agent.user_id
 )
 SELECT
     parcel.parcel_id,
@@ -99,7 +90,7 @@ LEFT JOIN payment_totals AS payment
 GO
 
 -- 03. STORED PROCEDURE: Get parcels by status
-CREATE PROCEDURE dbo.usp_GetParcelsByStatus
+CREATE OR ALTER PROCEDURE dbo.usp_GetParcelsByStatus
     @status VARCHAR(30)
 AS
 BEGIN

@@ -10,6 +10,8 @@ import AggregateReports from './pages/AggregateReports';
 import Chatbot from "./pages/Chatbot";
 import SqlConceptsPage from './pages/SqlConceptsPage';
 import ExtraFeaturesPage from './pages/ExtraFeaturesPage';
+import AuditLog from './pages/AuditLog';
+
 const emptyForm = {
   sender_id: 1,
   receiver_id: 1,
@@ -24,6 +26,7 @@ const managementLinks = [
   { to: '/receivers', label: 'Receiver Management' },
   { to: '/senders', label: 'Sender Management' },
   { to: '/delivery-agents', label: 'Delivery Agent Management' },
+  
 ];
 
 const reportLinks = [
@@ -31,6 +34,7 @@ const reportLinks = [
   { to: '/custom-reports', label: 'Custom Reports' },
   { to: '/sql-queries', label: 'SQL Query' },
   { to: '/aggregate-reports', label: 'Aggregate Reports' },
+  { to: '/audit-log', label: 'Activity Log' },
 ];
 
 function ParcelPage() {
@@ -803,6 +807,7 @@ export default function App() {
         <Route path="/chatbot" element={<Chatbot />} />
         <Route path="/sql-concepts" element={<SqlConceptsPage />} />
         <Route path="/extra-features" element={<ExtraFeaturesPage />} />
+        <Route path="/audit-log" element={<AuditLog />} />
       </Routes>
 
       <FloatingChat />

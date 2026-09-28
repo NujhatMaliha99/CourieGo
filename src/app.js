@@ -11,6 +11,7 @@ const innerLeftReportRoutes = require('./routes/innerLeftReportRoutes');
 const aggregateReportRoutes = require('./routes/aggregateReportRoutes');
 const sqlConceptRoutes = require('./routes/sqlConceptRoutes');
 const extraFeaturesRoutes = require('./routes/extraFeaturesRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 
 const app = express();
 
@@ -196,6 +197,7 @@ app.use('/api/parcels', parcelRoutes);
 app.use('/api/receivers', receiverRoutes);
 app.use('/api/senders', senderRoutes);
 app.use('/api/delivery-agents', deliveryAgentRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 
 // ==========================================

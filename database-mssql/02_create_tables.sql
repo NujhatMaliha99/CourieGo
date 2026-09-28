@@ -106,14 +106,20 @@ IF OBJECT_ID('dbo.delivery_agents', 'U') IS NULL
 BEGIN
     CREATE TABLE dbo.delivery_agents (
         agent_id INT IDENTITY(1,1) NOT NULL,
-        user_id INT NOT NULL,
+        full_name VARCHAR(100) NOT NULL,
+        phone VARCHAR(20) NOT NULL,
+        email VARCHAR(120) NULL,
+        address VARCHAR(255) NULL,
         vehicle_number VARCHAR(50) NULL,
+        license_number VARCHAR(50) NULL,
+
         availability_status VARCHAR(30) NOT NULL
             CONSTRAINT DF_delivery_agents_status DEFAULT 'available',
+        created_at DATETIME2 NOT NULL
+            CONSTRAINT DF_delivery_agents_created_at DEFAULT SYSDATETIME(),
+
         CONSTRAINT PK_delivery_agents PRIMARY KEY (agent_id),
-        CONSTRAINT UQ_delivery_agents_user UNIQUE (user_id),
-        CONSTRAINT FK_delivery_agents_user FOREIGN KEY (user_id)
-            REFERENCES dbo.users(user_id) ON DELETE CASCADE,
+        CONSTRAINT UQ_delivery_agents_phone UNIQUE (phone),
         CONSTRAINT CK_delivery_agents_status CHECK (
             availability_status IN ('available', 'assigned', 'offline')
         )

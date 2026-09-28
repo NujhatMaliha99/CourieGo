@@ -9,6 +9,7 @@ import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
 import AggregateReports from './pages/AggregateReports';
 import Chatbot from "./pages/Chatbot";
 import SqlConceptsPage from './pages/SqlConceptsPage';
+import ExtraFeaturesPage from './pages/ExtraFeaturesPage';
 const emptyForm = {
   sender_id: 1,
   receiver_id: 1,
@@ -252,6 +253,9 @@ function ParcelPage() {
           <div className="parcel-concepts-row">
             <Link to="/sql-concepts" className="parcel-nav-link parcel-concepts-link">
               UNION, VIEW &amp; PROCEDURE<span aria-hidden="true">↗</span>
+            </Link>
+            <Link to="/extra-features" className="parcel-nav-link parcel-nav-link-secondary">
+              Advance Query<span aria-hidden="true">↗</span>
             </Link>
           </div>
         </nav>
@@ -798,6 +802,7 @@ export default function App() {
         <Route path="/aggregate-reports" element={<AggregateReports />} />
         <Route path="/chatbot" element={<Chatbot />} />
         <Route path="/sql-concepts" element={<SqlConceptsPage />} />
+        <Route path="/extra-features" element={<ExtraFeaturesPage />} />
       </Routes>
 
       <FloatingChat />

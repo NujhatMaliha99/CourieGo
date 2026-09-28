@@ -11,6 +11,7 @@ import Chatbot from "./pages/Chatbot";
 import SqlConceptsPage from './pages/SqlConceptsPage';
 import ExtraFeaturesPage from './pages/ExtraFeaturesPage';
 import AuditLog from './pages/AuditLog';
+import ExceptPage from './pages/ExceptPage';
 
 const emptyForm = {
   sender_id: 1,
@@ -260,6 +261,9 @@ function ParcelPage() {
             </Link>
             <Link to="/extra-features" className="parcel-nav-link parcel-nav-link-secondary">
               Advance Query<span aria-hidden="true">↗</span>
+            </Link>
+            <Link to="/except" className="parcel-nav-link parcel-nav-link-secondary">
+              EXCEPT Query<span aria-hidden="true">↗</span>
             </Link>
           </div>
         </nav>
@@ -808,6 +812,7 @@ export default function App() {
         <Route path="/sql-concepts" element={<SqlConceptsPage />} />
         <Route path="/extra-features" element={<ExtraFeaturesPage />} />
         <Route path="/audit-log" element={<AuditLog />} />
+        <Route path="/except" element={<ExceptPage />} />
       </Routes>
 
       <FloatingChat />

@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+
 import ReceiverManagement from './pages/ReceiverManagement';
 import SenderManagement from './pages/SenderManagement';
 import DeliveryAgentManagement from './pages/DeliveryAgentManagement';
-import ReportPage from "./pages/ReportPage";
-import CustomQueryReports from "./pages/CustomQueryReports";
+import ReportPage from './pages/ReportPage';
+import CustomQueryReports from './pages/CustomQueryReports';
 import InnerLeftSqlReports from './pages/InnerLeftSqlReports';
 import AggregateReports from './pages/AggregateReports';
-import Chatbot from "./pages/Chatbot";
+import Chatbot from './pages/Chatbot';
 import SqlConceptsPage from './pages/SqlConceptsPage';
 import ExtraFeaturesPage from './pages/ExtraFeaturesPage';
+import IntersectionTransaction from './IntersectionTransaction';
+
 const emptyForm = {
   sender_id: 1,
   receiver_id: 1,
@@ -45,75 +48,114 @@ function ParcelPage() {
   const [editMessage, setEditMessage] = useState('');
   const [senders, setSenders] = useState([]);
   const [receivers, setReceivers] = useState([]);
+
   // Read One (Search State)
   const [searchId, setSearchId] = useState('');
   const [singleParcel, setSingleParcel] = useState(null);
   const [searchMessage, setSearchMessage] = useState('');
+
   // Feature 1: Filter State
   const [statusFilter, setStatusFilter] = useState('all');
+
   const loadParcels = async () => {
     try {
       const response = await fetch('/api/parcels');
       const result = await response.json();
-      setParcels(Array.isArray(result) ? result : result.data || []);
+
+      setParcels(
+        Array.isArray(result)
+          ? result
+          : result.data || []
+      );
     } catch (error) {
       console.error('Error loading parcels:', error);
     }
   };
+
   const loadForeignKeyOptions = async () => {
     try {
-      const [senderResponse, receiverResponse] = await Promise.all([
-        fetch('/api/senders'),
-        fetch('/api/receivers'),
-      ]);
+      const [senderResponse, receiverResponse] =
+        await Promise.all([
+          fetch('/api/senders'),
+          fetch('/api/receivers'),
+        ]);
+
       const senderResult = await senderResponse.json();
       const receiverResult = await receiverResponse.json();
+
       const senderRows = senderResult.data || [];
       const receiverRows = receiverResult.data || [];
+
       setSenders(senderRows);
       setReceivers(receiverRows);
+
       setForm((current) => ({
         ...current,
+
         sender_id: senderRows.some(
-          (row) => String(row.user_id) === String(current.sender_id)
+          (row) =>
+            String(row.user_id) ===
+            String(current.sender_id)
         )
           ? current.sender_id
           : senderRows[0]?.user_id || '',
+
         receiver_id: receiverRows.some(
-          (row) => String(row.receiver_id) === String(current.receiver_id)
+          (row) =>
+            String(row.receiver_id) ===
+            String(current.receiver_id)
         )
           ? current.receiver_id
           : receiverRows[0]?.receiver_id || '',
       }));
     } catch {
-      setMessage('Could not load sender or receiver list.');
+      setMessage(
+        'Could not load sender or receiver list.'
+      );
     }
   };
+
   useEffect(() => {
     loadParcels();
     loadForeignKeyOptions();
   }, []);
+
   const searchParcelById = async (event) => {
     event.preventDefault();
+
     setSingleParcel(null);
     setSearchMessage('');
+
     if (!searchId) return;
+
     try {
-      const response = await fetch(`/api/parcels/${searchId}`);
+      const response = await fetch(
+        `/api/parcels/${searchId}`
+      );
+
       const result = await response.json();
+
       if (response.ok) {
         setSingleParcel(result.data || result);
       } else {
-        setSearchMessage(result.message || 'Parcel not found.');
+        setSearchMessage(
+          result.message || 'Parcel not found.'
+        );
       }
     } catch (error) {
       setSearchMessage('Error searching parcel.');
     }
   };
+
   const change = ({ target }) =>
-    setForm({ ...form, [target.name]: target.value });
+    setForm({
+      ...form,
+      [target.name]: target.value,
+    });
+
   const startEdit = (parcel) => {
     setEditingParcel(parcel);
+
     setEditForm({
       sender_id: parcel.sender_id,
       receiver_id: parcel.receiver_id,
@@ -123,170 +165,331 @@ function ParcelPage() {
       charge: parcel.charge,
       status: parcel.status,
     });
+
     setEditMessage('');
   };
+
   const editChange = ({ target }) =>
-    setEditForm({ ...editForm, [target.name]: target.value });
+    setEditForm({
+      ...editForm,
+      [target.name]: target.value,
+    });
+
   const cancelEdit = () => {
     setEditingParcel(null);
     setEditForm(null);
     setEditMessage('');
   };
+
   const submitEdit = async (event) => {
     event.preventDefault();
     setEditSaving(true);
+
     try {
       const response = await fetch(
         `/api/parcels/${editingParcel.parcel_id}`,
         {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify(editForm),
         }
       );
+
       const result = await response.json();
+
       if (!response.ok) {
-        setEditMessage(result.errors?.join(' ') || result.message);
+        setEditMessage(
+          result.errors?.join(' ') ||
+            result.message
+        );
         return;
       }
+
       cancelEdit();
-      setMessage(`Parcel updated. ID: ${result.data.parcel_id}`);
+
+      setMessage(
+        `Parcel updated. ID: ${result.data.parcel_id}`
+      );
+
       await loadParcels();
     } catch {
-      setEditMessage('Could not update parcel in SQL Server.');
+      setEditMessage(
+        'Could not update parcel in SQL Server.'
+      );
     } finally {
       setEditSaving(false);
     }
   };
+
   const createParcel = async (event) => {
     event.preventDefault();
     setSaving(true);
+
     try {
       const response = await fetch('/api/parcels', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(form),
       });
+
       const result = await response.json();
+
       setMessage(
         response.ok
-          ? `Parcel created. ID: ${result.data?.parcel_id || result.data?.id}`
+          ? `Parcel created. ID: ${
+              result.data?.parcel_id ||
+              result.data?.id
+            }`
           : result.message
       );
+
       if (response.ok) {
         setForm((current) => ({
           ...emptyForm,
           sender_id: current.sender_id,
           receiver_id: current.receiver_id,
         }));
+
         await loadParcels();
       }
     } catch (error) {
       setMessage('Failed to create parcel.');
     }
+
     setSaving(false);
   };
+
   const deleteParcel = async (parcelId) => {
-    if (!window.confirm('Are you sure you want to delete this parcel?')) {
+    if (
+      !window.confirm(
+        'Are you sure you want to delete this parcel?'
+      )
+    ) {
       return;
     }
+
     try {
-      const response = await fetch(`/api/parcels/${parcelId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/parcels/${parcelId}`,
+        {
+          method: 'DELETE',
+        }
+      );
+
       const result = await response.json();
+
       if (!response.ok) {
-        setMessage(result.message || 'Failed to delete parcel.');
+        setMessage(
+          result.message ||
+            'Failed to delete parcel.'
+        );
         return;
       }
+
       setMessage('Parcel deleted successfully.');
+
       await loadParcels();
     } catch {
-      setMessage('Could not connect to the SQL Server backend.');
+      setMessage(
+        'Could not connect to the SQL Server backend.'
+      );
     }
   };
+
   const filteredParcels = parcels.filter(
-    (p) => statusFilter === 'all' || p.status === statusFilter
+    (p) =>
+      statusFilter === 'all' ||
+      p.status === statusFilter
   );
+
   return (
     <main className="parcel-page">
       <header className="parcel-header">
+
         <div className="parcel-brand-row">
           <div className="parcel-brand">
-            <span className="parcel-brand-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round">
+
+            <span
+              className="parcel-brand-icon"
+              aria-hidden="true"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinejoin="round"
+              >
                 <path d="m12 3 9 5v8l-9 5-9-5V8l9-5Z" />
                 <path d="m3 8 9 5 9-5M12 13v8M7.5 5.5l9 5" />
               </svg>
             </span>
-            <span className="parcel-wordmark">Courie<span>Go</span></span>
+
+            <span className="parcel-wordmark">
+              Courie<span>Go</span>
+            </span>
+
           </div>
-          <span className="parcel-header-badge">Parcel Management</span>
+
+          <span className="parcel-header-badge">
+            Parcel Management
+          </span>
         </div>
 
         <h1>Create a parcel</h1>
-        <p>Add a new parcel and manage your deliveries in one place.</p>
 
-        <nav className="parcel-navigation" aria-label="Courier management and reports">
+        <p>
+          Add a new parcel and manage your deliveries
+          in one place.
+        </p>
+
+        <nav
+          className="parcel-navigation"
+          aria-label="Courier management and reports"
+        >
+
+          {/* MANAGEMENT */}
           <div className="parcel-nav-group">
-            <span className="parcel-nav-label">Management</span>
+
+            <span className="parcel-nav-label">
+              Management
+            </span>
+
             <div className="parcel-nav-grid parcel-nav-management">
+
               {managementLinks.map((link) => (
-                <Link key={link.to} to={link.to} className="parcel-nav-link">
-                  {link.label}<span aria-hidden="true">↗</span>
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="parcel-nav-link"
+                >
+                  {link.label}
+
+                  <span aria-hidden="true">
+                    ↗
+                  </span>
                 </Link>
               ))}
+
             </div>
           </div>
 
+          {/* REPORTS */}
           <div className="parcel-nav-group">
-            <span className="parcel-nav-label">Reports &amp; queries</span>
+
+            <span className="parcel-nav-label">
+              Reports &amp; queries
+            </span>
+
             <div className="parcel-nav-grid parcel-nav-reports">
+
               {reportLinks.map((link) => (
-                <Link key={link.to} to={link.to} className="parcel-nav-link parcel-nav-link-secondary">
-                  {link.label}<span aria-hidden="true">↗</span>
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="parcel-nav-link parcel-nav-link-secondary"
+                >
+                  {link.label}
+
+                  <span aria-hidden="true">
+                    ↗
+                  </span>
                 </Link>
               ))}
+
             </div>
           </div>
 
+          {/* SQL CONCEPTS + ADVANCE QUERY + INTERSECTION */}
           <div className="parcel-concepts-row">
-            <Link to="/sql-concepts" className="parcel-nav-link parcel-concepts-link">
-              UNION, VIEW &amp; PROCEDURE<span aria-hidden="true">↗</span>
+
+            <Link
+              to="/sql-concepts"
+              className="parcel-nav-link parcel-concepts-link"
+            >
+              UNION, VIEW &amp; PROCEDURE
+
+              <span aria-hidden="true">
+                ↗
+              </span>
             </Link>
-            <Link to="/extra-features" className="parcel-nav-link parcel-nav-link-secondary">
-              Advance Query<span aria-hidden="true">↗</span>
+
+            <Link
+              to="/extra-features"
+              className="parcel-nav-link parcel-nav-link-secondary"
+            >
+              Advance Query
+
+              <span aria-hidden="true">
+                ↗
+              </span>
             </Link>
+
+            {/* ONLY ONE INTERSECTION & TRANSACTION BUTTON */}
+            <Link
+              to="/intersection-transaction"
+              className="parcel-nav-link parcel-nav-link-secondary"
+            >
+              Intersection &amp; Transaction
+
+              <span aria-hidden="true">
+                ↗
+              </span>
+            </Link>
+
           </div>
+
         </nav>
       </header>
+
+      {/* CREATE PARCEL */}
       <form onSubmit={createParcel}>
+
         <select
           name="sender_id"
           value={form.sender_id}
           onChange={change}
           required
         >
-          <option value="">Select Sender</option>
+          <option value="">
+            Select Sender
+          </option>
+
           {senders.map((sender) => (
-            <option key={sender.user_id} value={sender.user_id}>
+            <option
+              key={sender.user_id}
+              value={sender.user_id}
+            >
               {sender.user_id} - {sender.full_name}
             </option>
           ))}
         </select>
+
         <select
           name="receiver_id"
           value={form.receiver_id}
           onChange={change}
           required
         >
-          <option value="">Select Receiver</option>
+          <option value="">
+            Select Receiver
+          </option>
+
           {receivers.map((receiver) => (
-            <option key={receiver.receiver_id} value={receiver.receiver_id}>
-              {receiver.receiver_id} - {receiver.full_name}
+            <option
+              key={receiver.receiver_id}
+              value={receiver.receiver_id}
+            >
+              {receiver.receiver_id} -{' '}
+              {receiver.full_name}
             </option>
           ))}
         </select>
+
         <input
           name="tracking_id"
           minLength="3"
@@ -295,6 +498,7 @@ function ParcelPage() {
           placeholder="Tracking ID"
           required
         />
+
         <input
           name="parcel_type"
           value={form.parcel_type}
@@ -302,6 +506,7 @@ function ParcelPage() {
           placeholder="Parcel type"
           required
         />
+
         <input
           name="weight"
           type="number"
@@ -312,6 +517,7 @@ function ParcelPage() {
           placeholder="Weight"
           required
         />
+
         <input
           name="charge"
           type="number"
@@ -322,20 +528,52 @@ function ParcelPage() {
           placeholder="Charge"
           required
         />
-        <select name="status" value={form.status} onChange={change}>
-          <option value="pending">Pending</option>
-          <option value="picked_up">Picked up</option>
-          <option value="in_transit">In transit</option>
-          <option value="out_for_delivery">Out for delivery</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
+
+        <select
+          name="status"
+          value={form.status}
+          onChange={change}
+        >
+          <option value="pending">
+            Pending
+          </option>
+
+          <option value="picked_up">
+            Picked up
+          </option>
+
+          <option value="in_transit">
+            In transit
+          </option>
+
+          <option value="out_for_delivery">
+            Out for delivery
+          </option>
+
+          <option value="delivered">
+            Delivered
+          </option>
+
+          <option value="cancelled">
+            Cancelled
+          </option>
         </select>
+
         <button disabled={saving}>
-          {saving ? 'Creating...' : 'Create Parcel'}
+          {saving
+            ? 'Creating...'
+            : 'Create Parcel'}
         </button>
-        {message && <p className="message">{message}</p>}
+
+        {message && (
+          <p className="message">
+            {message}
+          </p>
+        )}
+
       </form>
-      {/* READ ONE (Search Box) */}
+
+      {/* READ ONE */}
       <section
         className="search-section"
         style={{
@@ -345,20 +583,36 @@ function ParcelPage() {
           borderRadius: '5px',
         }}
       >
-        <h3>Search Parcel by ID (Read One)</h3>
+
+        <h3>
+          Search Parcel by ID (Read One)
+        </h3>
+
         <form
           onSubmit={searchParcelById}
-          style={{ display: 'flex', gap: '10px', marginTop: '10px' }}
+          style={{
+            display: 'flex',
+            gap: '10px',
+            marginTop: '10px',
+          }}
         >
+
           <input
             type="number"
             placeholder="Enter Parcel ID (e.g. 1)"
             value={searchId}
-            onChange={(e) => setSearchId(e.target.value)}
+            onChange={(e) =>
+              setSearchId(e.target.value)
+            }
             required
           />
-          <button type="submit">Search</button>
+
+          <button type="submit">
+            Search
+          </button>
+
         </form>
+
         {singleParcel && (
           <div
             style={{
@@ -368,22 +622,55 @@ function ParcelPage() {
               borderRadius: '4px',
             }}
           >
+
             <p>
-              <strong>Parcel ID:</strong> {singleParcel.parcel_id || singleParcel.id} |{' '}
-              <strong>Tracking:</strong> {singleParcel.tracking_id} |{' '}
-              <strong>Type:</strong> {singleParcel.parcel_type} |{' '}
-              <strong>Weight:</strong> {singleParcel.weight} kg |{' '}
-              <strong>Charge:</strong> BDT {singleParcel.charge} |{' '}
-              <strong>Status:</strong> {singleParcel.status?.replaceAll('_', ' ')}
+              <strong>Parcel ID:</strong>{' '}
+              {singleParcel.parcel_id ||
+                singleParcel.id}
+              {' | '}
+
+              <strong>Tracking:</strong>{' '}
+              {singleParcel.tracking_id}
+              {' | '}
+
+              <strong>Type:</strong>{' '}
+              {singleParcel.parcel_type}
+              {' | '}
+
+              <strong>Weight:</strong>{' '}
+              {singleParcel.weight} kg
+              {' | '}
+
+              <strong>Charge:</strong>{' '}
+              BDT {singleParcel.charge}
+              {' | '}
+
+              <strong>Status:</strong>{' '}
+              {singleParcel.status?.replaceAll(
+                '_',
+                ' '
+              )}
             </p>
+
           </div>
         )}
+
         {searchMessage && (
-          <p style={{ color: 'red', marginTop: '10px' }}>{searchMessage}</p>
+          <p
+            style={{
+              color: 'red',
+              marginTop: '10px',
+            }}
+          >
+            {searchMessage}
+          </p>
         )}
+
       </section>
-      {/* READ ALL (Table + Filter) */}
+
+      {/* READ ALL */}
       <section>
+
         <div
           style={{
             display: 'flex',
@@ -391,25 +678,55 @@ function ParcelPage() {
             alignItems: 'center',
           }}
         >
-          <h2>Parcels</h2>
+
+          <h2>
+            Parcels
+          </h2>
+
           <label>
             Filter:
+
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              style={{ marginLeft: '5px' }}
+              onChange={(e) =>
+                setStatusFilter(e.target.value)
+              }
+              style={{
+                marginLeft: '5px',
+              }}
             >
-              <option value="all">All</option>
-              <option value="pending">Pending</option>
-              <option value="picked_up">Picked up</option>
-              <option value="in_transit">In transit</option>
-              <option value="delivered">Delivered</option>
+
+              <option value="all">
+                All
+              </option>
+
+              <option value="pending">
+                Pending
+              </option>
+
+              <option value="picked_up">
+                Picked up
+              </option>
+
+              <option value="in_transit">
+                In transit
+              </option>
+
+              <option value="delivered">
+                Delivered
+              </option>
+
             </select>
           </label>
+
         </div>
+
         <div className="table-wrap">
+
           <table>
+
             <thead>
+
               <tr>
                 <th>ID</th>
                 <th>Tracking ID</th>
@@ -419,133 +736,279 @@ function ParcelPage() {
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
+
             </thead>
+
             <tbody>
-              {filteredParcels.map((parcel, index) => (
-                <tr key={parcel.parcel_id || parcel.id || index}>
-                  <td>{parcel.parcel_id || parcel.id}</td>
-                  <td>{parcel.tracking_id}</td>
-                  <td>{parcel.parcel_type}</td>
-                  <td>{parcel.weight} kg</td>
-                  <td>BDT {parcel.charge}</td>
-                  <td>{parcel.status?.replaceAll('_', ' ')}</td>
-                  <td className="actions">
-                    <button
-                      type="button"
-                      className="view"
-                      onClick={() => setSelectedParcel(parcel)}
-                    >
-                      View
-                    </button>
-                    <button
-                      type="button"
-                      className="edit"
-                      onClick={() => startEdit(parcel)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="delete"
-                      onClick={() =>
-                        deleteParcel(parcel.parcel_id || parcel.id)
-                      }
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+
+              {filteredParcels.map(
+                (parcel, index) => (
+
+                  <tr
+                    key={
+                      parcel.parcel_id ||
+                      parcel.id ||
+                      index
+                    }
+                  >
+
+                    <td>
+                      {parcel.parcel_id ||
+                        parcel.id}
+                    </td>
+
+                    <td>
+                      {parcel.tracking_id}
+                    </td>
+
+                    <td>
+                      {parcel.parcel_type}
+                    </td>
+
+                    <td>
+                      {parcel.weight} kg
+                    </td>
+
+                    <td>
+                      BDT {parcel.charge}
+                    </td>
+
+                    <td>
+                      {parcel.status?.replaceAll(
+                        '_',
+                        ' '
+                      )}
+                    </td>
+
+                    <td className="actions">
+
+                      <button
+                        type="button"
+                        className="view"
+                        onClick={() =>
+                          setSelectedParcel(
+                            parcel
+                          )
+                        }
+                      >
+                        View
+                      </button>
+
+                      <button
+                        type="button"
+                        className="edit"
+                        onClick={() =>
+                          startEdit(parcel)
+                        }
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        type="button"
+                        className="delete"
+                        onClick={() =>
+                          deleteParcel(
+                            parcel.parcel_id ||
+                              parcel.id
+                          )
+                        }
+                      >
+                        Delete
+                      </button>
+
+                    </td>
+
+                  </tr>
+
+                )
+              )}
+
             </tbody>
+
           </table>
+
         </div>
-        {!filteredParcels.length && <p className="empty">No parcels found.</p>}
+
+        {!filteredParcels.length && (
+          <p className="empty">
+            No parcels found.
+          </p>
+        )}
+
       </section>
-      {/* View Modal */}
+
+      {/* VIEW MODAL */}
       {selectedParcel && (
-        <div className="overlay" onClick={() => setSelectedParcel(null)}>
-          <article className="details" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="overlay"
+          onClick={() =>
+            setSelectedParcel(null)
+          }
+        >
+
+          <article
+            className="details"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
             <div className="details-head">
-              <h2>Parcel Details</h2>
-              <button type="button" onClick={() => setSelectedParcel(null)}>
+
+              <h2>
+                Parcel Details
+              </h2>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedParcel(null)
+                }
+              >
                 X
               </button>
+
             </div>
+
             <dl>
+
               <div>
                 <dt>Parcel ID</dt>
-                <dd>{selectedParcel.parcel_id || selectedParcel.id}</dd>
+                <dd>
+                  {selectedParcel.parcel_id ||
+                    selectedParcel.id}
+                </dd>
               </div>
+
               <div>
                 <dt>Tracking ID</dt>
-                <dd>{selectedParcel.tracking_id}</dd>
+                <dd>
+                  {selectedParcel.tracking_id}
+                </dd>
               </div>
+
               <div>
                 <dt>Sender ID</dt>
-                <dd>{selectedParcel.sender_id}</dd>
+                <dd>
+                  {selectedParcel.sender_id}
+                </dd>
               </div>
+
               <div>
                 <dt>Receiver ID</dt>
-                <dd>{selectedParcel.receiver_id}</dd>
+                <dd>
+                  {selectedParcel.receiver_id}
+                </dd>
               </div>
+
               <div>
                 <dt>Parcel Type</dt>
-                <dd>{selectedParcel.parcel_type}</dd>
+                <dd>
+                  {selectedParcel.parcel_type}
+                </dd>
               </div>
+
               <div>
                 <dt>Weight</dt>
-                <dd>{selectedParcel.weight} kg</dd>
+                <dd>
+                  {selectedParcel.weight} kg
+                </dd>
               </div>
+
               <div>
                 <dt>Charge</dt>
-                <dd>BDT {selectedParcel.charge}</dd>
+                <dd>
+                  BDT {selectedParcel.charge}
+                </dd>
               </div>
+
               <div>
                 <dt>Status</dt>
-                <dd>{selectedParcel.status?.replaceAll('_', ' ')}</dd>
+                <dd>
+                  {selectedParcel.status?.replaceAll(
+                    '_',
+                    ' '
+                  )}
+                </dd>
               </div>
+
             </dl>
+
           </article>
+
         </div>
       )}
-      {/* Edit Modal */}
+
+      {/* EDIT MODAL */}
       {editingParcel && editForm && (
-        <div className="overlay" onClick={cancelEdit}>
-          <article className="details" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="overlay"
+          onClick={cancelEdit}
+        >
+
+          <article
+            className="details"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+
             <div className="details-head">
-              <h2>Edit Parcel</h2>
-              <button type="button" onClick={cancelEdit}>
+
+              <h2>
+                Edit Parcel
+              </h2>
+
+              <button
+                type="button"
+                onClick={cancelEdit}
+              >
                 X
               </button>
+
             </div>
+
             <form onSubmit={submitEdit}>
+
               <select
                 name="sender_id"
                 value={editForm.sender_id}
                 onChange={editChange}
                 required
               >
+
                 {senders.map((sender) => (
-                  <option key={sender.user_id} value={sender.user_id}>
-                    {sender.user_id} - {sender.full_name}
+                  <option
+                    key={sender.user_id}
+                    value={sender.user_id}
+                  >
+                    {sender.user_id} -{' '}
+                    {sender.full_name}
                   </option>
                 ))}
+
               </select>
+
               <select
                 name="receiver_id"
                 value={editForm.receiver_id}
                 onChange={editChange}
                 required
               >
+
                 {receivers.map((receiver) => (
                   <option
                     key={receiver.receiver_id}
                     value={receiver.receiver_id}
                   >
-                    {receiver.receiver_id} - {receiver.full_name}
+                    {receiver.receiver_id} -{' '}
+                    {receiver.full_name}
                   </option>
                 ))}
+
               </select>
+
               <input
                 name="tracking_id"
                 minLength="3"
@@ -553,12 +1016,14 @@ function ParcelPage() {
                 onChange={editChange}
                 required
               />
+
               <input
                 name="parcel_type"
                 value={editForm.parcel_type}
                 onChange={editChange}
                 required
               />
+
               <input
                 name="weight"
                 type="number"
@@ -568,6 +1033,7 @@ function ParcelPage() {
                 onChange={editChange}
                 required
               />
+
               <input
                 name="charge"
                 type="number"
@@ -577,36 +1043,77 @@ function ParcelPage() {
                 onChange={editChange}
                 required
               />
+
               <select
                 name="status"
                 value={editForm.status}
                 onChange={editChange}
-                disabled={editingParcel?.status === 'delivered'}
+                disabled={
+                  editingParcel?.status ===
+                  'delivered'
+                }
               >
-                <option value="pending">Pending</option>
-                <option value="picked_up">Picked up</option>
-                <option value="in_transit">In transit</option>
-                <option value="out_for_delivery">Out for delivery</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
+
+                <option value="pending">
+                  Pending
+                </option>
+
+                <option value="picked_up">
+                  Picked up
+                </option>
+
+                <option value="in_transit">
+                  In transit
+                </option>
+
+                <option value="out_for_delivery">
+                  Out for delivery
+                </option>
+
+                <option value="delivered">
+                  Delivered
+                </option>
+
+                <option value="cancelled">
+                  Cancelled
+                </option>
+
               </select>
-              {editingParcel?.status === 'delivered' && (
-                <p className="message">Delivered parcel status cannot be changed.</p>
+
+              {editingParcel?.status ===
+                'delivered' && (
+                <p className="message">
+                  Delivered parcel status
+                  cannot be changed.
+                </p>
               )}
-              {editMessage && <p className="message">{editMessage}</p>}
+
+              {editMessage && (
+                <p className="message">
+                  {editMessage}
+                </p>
+              )}
+
               <button disabled={editSaving}>
-                {editSaving ? 'Updating...' : 'Update Parcel'}
+                {editSaving
+                  ? 'Updating...'
+                  : 'Update Parcel'}
               </button>
+
             </form>
+
           </article>
+
         </div>
       )}
+
     </main>
   );
 }
 
 function FloatingChat() {
-  const [chatOpen, setChatOpen] = useState(false);
+  const [chatOpen, setChatOpen] =
+    useState(false);
 
   return (
     <>
@@ -631,6 +1138,7 @@ function FloatingChat() {
             opacity: 0;
             transform: translateY(16px) scale(0.97);
           }
+
           to {
             opacity: 1;
             transform: translateY(0) scale(1);
@@ -754,10 +1262,23 @@ function FloatingChat() {
       <button
         type="button"
         className="floating-chat-button"
-        onClick={() => setChatOpen((current) => !current)}
-        aria-label={chatOpen ? 'Close CourieGo Assistant' : 'Open CourieGo Assistant'}
-        title={chatOpen ? 'Close CourieGo Assistant' : 'Open CourieGo Assistant'}
+        onClick={() =>
+          setChatOpen(
+            (current) => !current
+          )
+        }
+        aria-label={
+          chatOpen
+            ? 'Close CourieGo Assistant'
+            : 'Open CourieGo Assistant'
+        }
+        title={
+          chatOpen
+            ? 'Close CourieGo Assistant'
+            : 'Open CourieGo Assistant'
+        }
       >
+
         {chatOpen ? (
           <svg
             viewBox="0 0 24 24"
@@ -783,6 +1304,7 @@ function FloatingChat() {
             />
           </svg>
         )}
+
       </button>
     </>
   );
@@ -791,21 +1313,74 @@ function FloatingChat() {
 export default function App() {
   return (
     <BrowserRouter>
+
       <Routes>
-        <Route path="/" element={<ParcelPage />} />
-        <Route path="/receivers" element={<ReceiverManagement />} />
-        <Route path="/senders" element={<SenderManagement />} />
-        <Route path="/delivery-agents" element={<DeliveryAgentManagement />} />
-        <Route path="/reports" element={<ReportPage />} />
-        <Route path="/custom-reports" element={<CustomQueryReports />} />
-        <Route path="/sql-queries" element={<InnerLeftSqlReports />} />
-        <Route path="/aggregate-reports" element={<AggregateReports />} />
-        <Route path="/chatbot" element={<Chatbot />} />
-        <Route path="/sql-concepts" element={<SqlConceptsPage />} />
-        <Route path="/extra-features" element={<ExtraFeaturesPage />} />
+
+        <Route
+          path="/"
+          element={<ParcelPage />}
+        />
+
+        <Route
+          path="/receivers"
+          element={<ReceiverManagement />}
+        />
+
+        <Route
+          path="/senders"
+          element={<SenderManagement />}
+        />
+
+        <Route
+          path="/delivery-agents"
+          element={<DeliveryAgentManagement />}
+        />
+
+        <Route
+          path="/reports"
+          element={<ReportPage />}
+        />
+
+        <Route
+          path="/custom-reports"
+          element={<CustomQueryReports />}
+        />
+
+        <Route
+          path="/sql-queries"
+          element={<InnerLeftSqlReports />}
+        />
+
+        <Route
+          path="/aggregate-reports"
+          element={<AggregateReports />}
+        />
+
+        <Route
+          path="/chatbot"
+          element={<Chatbot />}
+        />
+
+        <Route
+          path="/sql-concepts"
+          element={<SqlConceptsPage />}
+        />
+
+        <Route
+          path="/extra-features"
+          element={<ExtraFeaturesPage />}
+        />
+
+        {/* INTERSECTION & TRANSACTION PAGE */}
+        <Route
+          path="/intersection-transaction"
+          element={<IntersectionTransaction />}
+        />
+
       </Routes>
 
       <FloatingChat />
+
     </BrowserRouter>
   );
 }

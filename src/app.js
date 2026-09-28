@@ -1,3 +1,5 @@
+const intersectionTransactionRoutes = require('./routes/intersectionTransactionRoutes');
+
 const express = require('express');
 const cors = require('cors');
 
@@ -197,6 +199,11 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/parcels', parcelRoutes);
 app.use('/api/receivers', receiverRoutes);
+
+app.use(
+  '/api/intersection-transaction',
+  intersectionTransactionRoutes
+);
 app.use('/api/senders', senderRoutes);
 app.use('/api/delivery-agents', deliveryAgentRoutes);
 app.use('/api/audit-logs', auditRoutes);
